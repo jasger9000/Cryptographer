@@ -4,7 +4,7 @@ from pathlib import Path
 import logging
 from os.path import expandvars, getsize
 
-
+# TODO Make User send log to me
 
 # logger config
 logger = logging.getLogger(__name__)
