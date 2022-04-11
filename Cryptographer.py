@@ -11,11 +11,11 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 fmt = logging.Formatter('[%(levelname)s] %(asctime)s - %(name)s - %(message)s')
 
-# fileHandler config
-fileHandler = logging.FileHandler('Cryptographer.log')
-fileHandler.setLevel(logging.INFO)
-fileHandler.setFormatter(fmt)
-logger.addHandler(fileHandler)
+# # fileHandler config
+# fileHandler = logging.FileHandler('Cryptographer.log')
+# fileHandler.setLevel(logging.INFO)
+# fileHandler.setFormatter(fmt)
+# logger.addHandler(fileHandler)
 
 # streamHandler config
 debug = True
@@ -29,8 +29,9 @@ with open('Cryptographer.log', 'w') as f:
     f.write('')
 
 textFiles = '*.txt', '*.doc', '*.docx', '*.log', '*.msg', '*.odt', '*.pages', '*.rtf', '*.tex', '*.wpd', '*.wps'
-audioFiles = '*.aif', '*.aiff', '*.iff', '*.m3u', '*.m4a', '*.mp3', '*.mpa', '*.wav', '*.wma', '*.aup3', '*.aup', '*.ogg', '*.mp2'
 videoFiles = '*.mp4', '*.mov', '*.avi', '*.flv', '*.mkv', '*.wmv', '*.avchd', '*.webm', '*MPEG-4', '*.H.264'
+audioFiles = '*.aif', '*.aiff', '*.iff', '*.m3u', '*.m4a', '*.mp3', '*.mpa', '*.wav', '*.wma', '*.aup3', '*.aup', '*.ogg', '*.mp2'
+pictureFiles = '*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp', '*.raw', '*.tiff', '*.psd', '*.cr2'
 version = 'ver. 1.0.0'
 logger.info(f'Running Symmetric Cryptographer {version}')
 
@@ -45,7 +46,7 @@ def BrowseKeyDialog(keyEntry):
 
 def BrowseEncryptDialog(encrypt2Entry):
     global textFiles
-    browseEncryptDialog = filedialog.askopenfilename(initialdir=expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Encrypt...', filetypes=(('Text files', textFiles), ('Audio files', audioFiles), ('Video files', videoFiles),('Pdf files', '*.pdf'), ('All files', '*.*')))
+    browseEncryptDialog = filedialog.askopenfilename(initialdir=expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Encrypt...', filetypes=(('Text files', textFiles), ('Video files', videoFiles), ('Audio files', audioFiles),('Picture files', pictureFiles), ('Pdf files', '*.pdf'), ('All files', '*.*')))
     if browseEncryptDialog:
         logger.info('User selected file to Encrypt')
         encrypt2Entry.delete(0,"end")
@@ -154,33 +155,33 @@ def Cryptography2(mode: str, entry, keyEntry, out):
                     with open(keyPath, 'rb') as f:
                         k = Fernet(f.read())  # Imports the Key
                     
-                    logger.info(f'imports fileContents in Cryptography2 {mode} mode')
-                    # imports fileContents of file to encrypt
-                    # TODO Fix video and audio encrypting
-                    with open(filePath, 'r') as f:
-                        fileContents = f.read()
-
-                    # Checks if / or \ is used
+                    # CheckSeperator
                     if filePath.find('/') != -1:
                         seperator = '/'
                     elif filePath.find(chr(92)) != -1:
                         seperator = chr(92)
+
+                    # imports fileContents of file to encrypt
+                    logger.info(f'imports fileContents in Cryptography2 {mode} mode')
+                    with open(filePath, 'rb') as f:
+                        fileContents = f.read()
+
                     # Encrypts or Decrypts the file, creates filePath2 + some other variables and deletes fileContents and filePath out of Memory
                     if mode == 'Encrypt':
-                        fileContents = k.encrypt(fileContents.encode()).decode()
+                        fileContents = k.encrypt(fileContents)
                         fileExtention = Path(filePath).suffix
                         pathLength2 = len(filePath.replace(fileExtention, ''))
                         filePath2 = filedialog.asksaveasfilename(initialdir=expandvars(filePath[0:filePath.rfind(seperator) + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind(seperator) + 1:pathLength2]}', title='Save Encrypted file...', filetypes=(('Encrypted file', '*.Encrypted'),('Text file', '*.txt'),('Any file', '*.*')))
                         # writes encrypted Contents to file
                         if filePath2:
                             logger.info('Encrypts and saves file')
-                            with open(filePath2, 'w') as f:
-                                f.write(f'{fileExtention} {fileContents}')
+                            with open(filePath2, 'wb') as f:
+                                f.write(fileExtention.encode()+ '$'.encode() +fileContents)
                         else:
                             logger.info('Finished Cryptography2 because User cancelled saving')
                             return
                     elif mode == 'Decrypt':
-                        fileContents = fileContents.split(' ')
+                        fileContents = fileContents.decode().split('$', 1)
                         extention = fileContents[0]
                         fileContents = k.decrypt(fileContents[1].encode())
                         pathLength2 = len(filePath.replace(Path(filePath).suffix, ''))
