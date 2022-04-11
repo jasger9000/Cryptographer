@@ -1,0 +1,16 @@
+[INFO] 2022-04-11 15:28:25,568 - __main__ - Running Symmetric Cryptographer ver. 1.0.0
+[INFO] 2022-04-11 15:28:25,681 - __main__ - loaded Tk Config
+[INFO] 2022-04-11 15:28:25,684 - __main__ - loaded key input
+[INFO] 2022-04-11 15:28:25,686 - __main__ - loaded encrypt options
+[INFO] 2022-04-11 15:28:25,687 - __main__ - loaded decrypt options
+[INFO] 2022-04-11 15:28:25,688 - __main__ - loading complete
+[INFO] 2022-04-11 15:28:29,241 - __main__ - User selected key
+[INFO] 2022-04-11 15:28:36,179 - __main__ - User selected file to Encrypt
+[INFO] 2022-04-11 15:28:36,791 - __main__ - Cryptography2 initiated in Encrypt mode
+[INFO] 2022-04-11 15:28:36,791 - __main__ - shows askYesNoPrompt1 in Cryptography2 Encrypt mode
+[INFO] 2022-04-11 15:28:38,093 - __main__ - imports key in Cryptography2 Encrypt mode
+[INFO] 2022-04-11 15:28:38,094 - __main__ - imports fileContents in Cryptography2 Encrypt mode
+[INFO] 2022-04-11 15:28:46,132 - __main__ - Encrypts and saves file
+[INFO] 2022-04-11 15:28:50,148 - __main__ - Encrypts and saves file
+[INFO] 2022-04-11 15:28:52,694 - __main__ - Encrypts and saves file
+[INFO] 2022-04-11 15:28:53,929 - __main__ - Finished Cryptography2 because User cancelled saving

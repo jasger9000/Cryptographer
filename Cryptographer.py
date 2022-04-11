@@ -154,17 +154,18 @@ def Cryptography2(mode: str, entry, keyEntry, out):
                     with open(keyPath, 'rb') as f:
                         k = Fernet(f.read())  # Imports the Key
                     
+                    # Checks if / or \ is used
+                    if filePath.find('/') != -1:
+                        seperator = '/'
+                    elif filePath.find(chr(92)) != -1:
+                        seperator = chr(92)
+                        
                     logger.info(f'imports fileContents in Cryptography2 {mode} mode')
                     # imports fileContents of file to encrypt
                     # TODO Fix video and audio encrypting
                     with open(filePath, 'r') as f:
                         fileContents = f.read()
 
-                    # Checks if / or \ is used
-                    if filePath.find('/') != -1:
-                        seperator = '/'
-                    elif filePath.find(chr(92)) != -1:
-                        seperator = chr(92)
                     # Encrypts or Decrypts the file, creates filePath2 + some other variables and deletes fileContents and filePath out of Memory
                     if mode == 'Encrypt':
                         fileContents = k.encrypt(fileContents.encode()).decode()
