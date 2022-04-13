@@ -33,7 +33,6 @@ videoFiles = '*.mp4', '*.mov', '*.avi', '*.flv', '*.mkv', '*.wmv', '*.avchd', '*
 audioFiles = '*.aif', '*.aiff', '*.iff', '*.m3u', '*.m4a', '*.mp3', '*.mpa', '*.wav', '*.wma', '*.aup3', '*.aup', '*.ogg', '*.mp2'
 pictureFiles = '*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp', '*.raw', '*.tiff', '*.psd', '*.cr2'
 version = 'ver. 1.0.0'
-logger.info(f'Running Symmetric Cryptographer {version}')
 
 
 def BrowseKeyDialog(keyEntry):
@@ -237,6 +236,7 @@ def Copy(root, out):
 
 
 def main():
+    logger.info(f'Running Symmetric Cryptographer {version}')
     # GUI Configuration
     root = Tk()
     root.title(f'Cryptographer {version}')
