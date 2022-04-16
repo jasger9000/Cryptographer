@@ -122,10 +122,8 @@ def Cryptography1(mode: str, entry, keyEntry, out):
 def Cryptography2(mode: str, entry, keyEntry, out):
     logger.info(f'Cryptography2 initiated in {mode} mode')
     # get variables
-    if mode == 'Encrypt':
-        filePath = entry.get()
-    elif mode == 'Decrypt':
-        filePath = entry.get()
+    filePath = entry.get()
+
     
     keyPath = keyEntry.get()
     if len(keyPath) != 0 and len(filePath) != 0:
