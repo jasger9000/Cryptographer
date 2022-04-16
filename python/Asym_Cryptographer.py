@@ -296,7 +296,7 @@ def main():
     # GUI Configuration
     root = Tk()
     root.title(f'Cryptographer {version}')
-    # root.iconbitmap('Cryptographer.exe')
+    root.iconbitmap('Cryptographer.exe')
     root.resizable(0,0)
     Label(root, text='Asymmetric Cryptographer', font=('Helvetica', 14, BOLD, UNDERLINE)).grid(row=0, column=0, columnspan=2) # KeyLabel
     logger.info('loaded Tk Config')
