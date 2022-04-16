@@ -23,7 +23,7 @@ with open('Cryptographer.log', 'w') as f:
     f.write('')
 
 # streamHandler config
-debug = True
+debug = False
 if debug is True:
     streamHandler = logging.StreamHandler()
     streamHandler.setFormatter(fmt)
