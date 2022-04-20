@@ -1,13 +1,14 @@
 from tkinter import UNDERLINE, filedialog, messagebox, Tk, Label, Button, Entry, LabelFrame
 from tkinter.font import BOLD
-from cryptography.fernet import Fernet, InvalidToken
+from cryptography.fernet import Fernet
 import rsa
 import base64
 import logging
 from pathlib import Path
 from os.path import expandvars, getsize
 from os import getcwd
-
+import requests
+from packaging.version import parse
 
 # logger config
 logger = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ fileTypes = (
     ('Private Key files', '*.priv_key'),
     ('Public Key files', '*.pub_key'),
 )
-version = 'ver. 1.0.0'
+version = 'v1.0.0'
 logger.info(f'Running Asymmetric Cryptographer {version}')
 
 class fileNotFoundError(FileNotFoundError):
@@ -51,6 +52,19 @@ class PrivKeyNotFoundError(FileNotFoundError):
 class PubKeyNotFoundError(FileNotFoundError):
     pass
 
+def CheckForUpdates():
+    try:
+        logger.info('Trying to get latest version')
+        latest = requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name']
+        logger.info('Got latest version')
+        if parse(latest) > parse(version):
+            userConfirm = messagebox.askyesno('New version available', "There's a new version available for download.\n Would you like to download it?")
+            if userConfirm:
+                
+    except Exception:
+        pass
+
+CheckForUpdates()
 def BrowseKeyDialog(keyEntry: Entry, mode: str):
     if mode == 'Private':
         type = 'priv_key'
