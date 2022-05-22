@@ -3,6 +3,8 @@
         "asksaveasfilename",
         "askyesno",
         "avchd",
+        "borderwidth",
+        "columnspan",
         "padx",
         "pady"
     ]

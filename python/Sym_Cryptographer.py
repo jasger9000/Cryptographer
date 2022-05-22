@@ -1,8 +1,10 @@
-from tkinter import filedialog, messagebox, Tk, Label, Button, Entry, LabelFrame
+from tkinter import UNDERLINE, filedialog, messagebox, Tk, Label, Button, Entry, LabelFrame
+from tkinter.font import BOLD
 from cryptography.fernet import Fernet, InvalidToken
 from pathlib import Path
 import logging
 from os.path import expandvars, getsize
+from os import getcwd
 
 # TODO Make User send log to me
 
@@ -32,7 +34,6 @@ textFiles = '*.txt', '*.doc', '*.docx', '*.log', '*.msg', '*.odt', '*.pages', '*
 videoFiles = '*.mp4', '*.mov', '*.avi', '*.flv', '*.mkv', '*.wmv', '*.avchd', '*.webm', '*MPEG-4', '*.H.264'
 audioFiles = '*.aif', '*.aiff', '*.iff', '*.m3u', '*.m4a', '*.mp3', '*.mpa', '*.wav', '*.wma', '*.aup3', '*.aup', '*.ogg', '*.mp2'
 pictureFiles = '*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp', '*.raw', '*.tiff', '*.psd', '*.cr2'
-version = 'ver. 1.0.0'
 
 
 def BrowseKeyDialog(keyEntry):
@@ -216,85 +217,106 @@ def Cryptography2(mode: str, entry, keyEntry, out):
             else:
                 logger.info('Finished Cryptography2 because UserConfirm is False')    
     elif len(keyPath) == 0:
-        logger.info(f'shows NoKeyEntered warning in Cryptograph2 {mode} mode')
+        logger.info(f'shows NoKeyEntered warning in Cryptography2 {mode} mode')
         messagebox.showwarning(title=f'No {mode}ion Key entered', message=f'Please insert or generate a {mode}ion Key to {mode} the file with!')
     elif len(filePath) == 0:
-        logger.info(f'shows NoMessageEntered warning in Cryptograph2 {mode} mode')
+        logger.info(f'shows NoMessageEntered warning in Cryptography2 {mode} mode')
         messagebox.showwarning(title='No filepath entered', message=f'Please enter a filepath of the file to {mode}!')
     return
 
-def Copy(root, out):
+def Copy(root: Tk, out: Entry):
+    logger.info('Copy function initiated')
     try:
         root.clipboard_clear()
         root.clipboard_append(out.get())
     except Exception:
-        logger.exception(f'Unknown error/uncaught exception in Copy()')
-        messagebox.showerror(title='Unknown error', message=f'An unknown error occurred while trying to copy!')
-    return
+        logger.exception(f'Unknown error/uncaught exception in Copy function')
+        messagebox.showerror(title='Unknown error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {getcwd()}/Cryptographer.log')
+    finally:
+        logger.info('Copy function finished')
 
+def Delete(out: Entry):
+    logger.info('Delete function initiated')
+    try:
+        out.config(state='normal')
+        out.delete(0, 'end')
+    except Exception:
+        logger.exception(f'Unknown/uncaught exception in Delete function')
+        messagebox.showerror(title='Unknown Error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {getcwd()}/Cryptographer.log')
+    finally:
+        out.config(state='readonly')
+        logger.info('Delete function finished')
 
-def main():
-    logger.info(f'Running Symmetric Cryptographer {version}')
+def main(root: Tk, version: str):
     # GUI Configuration
-    root = Tk()
-    root.title(f'Cryptographer {version}')
-    root.iconbitmap('Cryptographer.exe')
-    root.geometry('739x325')
-    root.resizable(0,0)
+    root.title(f'Symmetric Cryptographer {version}')
+    root.geometry('')
+    TitleLabel = Label(root, text='Symmetric Cryptographer', font=('Helvetica', 14, BOLD, UNDERLINE))
+    TitleLabel.grid(row=0, column=0, columnspan=2)
     logger.info('loaded Tk Config')
 
-    # Key Input
-    Label(root, text='En-/Decryption Key:', font='Helvetica, 14').place(x=270, y=2) # KeyLabel
-    Button(root, text='Generate Key', command=lambda: GenerateKey(keyEntry)).place(x=129, y=30) # GenerateKeyBtn
-    keyEntry = Entry(root, width=27, font=('Arial', 14)) # Define keyEntry
-    keyEntry.place(x=209, y=30) # Put keyEntry on screen
-    Button(root, text='Browse', command=lambda: BrowseKeyDialog(keyEntry)).place(x=509, y=30) # BrowseKeyBtn
-    logger.info('loaded key input')
+    # Key Frame
+    frame0 = LabelFrame(root, text='En-/Decryption Key:', font=('Arial', 12, UNDERLINE), padx=120, pady=12)
+    frame0.grid(row=1, column=0, padx=10, columnspan=2)
 
-    # Encryption frame
+    # Key Input
+    Button(frame0, text='Generate Key', command=lambda: GenerateKey(KeyEntry)).grid(row=0, column=0)
+    KeyEntry = Entry(frame0, width=25, font=('Arial', 14))
+    KeyEntry.grid(row=0, column=1)
+    Button(frame0, text='Browse', command=lambda: BrowseKeyDialog(KeyEntry)).grid(row=0, column=2)
+
+    # Encryption Frame
     frame1 = LabelFrame(root, text='Encrypt', font=('Arial', 12), padx=10, pady=12)
-    frame1.grid(row=0, column=0, padx=10, pady=70)
+    frame1.grid(row=2, column=0, padx=10, pady=10)
 
     # Encrypt option 1
     Label(frame1, text='Encrypt a message:').grid(row=0, column=0) # Description Label
     encrypt1Entry = Entry(frame1, font=('Arial', 14), width=20) # Define Entry
     encrypt1Entry.grid(row=1, column=0) # Put Entry on screen
-    Button(frame1, text='Encrypt', command=lambda: Cryptography1('Encrypt', encrypt1Entry, keyEntry, out)).grid(row=1, column=1) # Encrypt Btn
+    Button(frame1, text='Encrypt', command=lambda: Cryptography1('Encrypt', encrypt1Entry, KeyEntry, out)).grid(row=1, column=1) # Encrypt Btn
 
     # Encrypt option 2
     Label(frame1, text='\n\nEncrypt a file:').grid(row=2, column=0) # Description Label
     encrypt2Entry = Entry(frame1, font=('Arial', 14), width=20) # Define Entry
     encrypt2Entry.grid(row=3, column=0) # Put Entry on screen
-    Button(frame1, text='Encrypt', command=lambda: Cryptography2('Encrypt', encrypt2Entry, keyEntry, out)).grid(row=3,column=1) # Encrypt Btn
+    Button(frame1, text='Encrypt', command=lambda: Cryptography2('Encrypt', encrypt2Entry, KeyEntry, out)).grid(row=3,column=1) # Encrypt Btn
     Button(frame1, text='Browse', command=lambda: BrowseEncryptDialog(encrypt2Entry)).grid(row=3, column=2) # BrowseCryptographyDialog
     logger.info('loaded encrypt options')
 
     # Decryption Frame
     frame2 = LabelFrame(root, text='Decrypt', font=('Arial', 12), padx=10, pady=12)
-    frame2.grid(row=0, column=1, padx=10, pady=70)
+    frame2.grid(row=2, column=1, padx=10, pady=10)
 
     # Decrypt option 1
     Label(frame2, text='Decrypt a message:').grid(row=0, column=0) # Description Label
     decrypt1Entry = Entry(frame2, font=('Arial', 14), width=20) # Define Entry
     decrypt1Entry.grid(row=1, column=0) # Put Entry on screen
-    Button(frame2, text='Decrypt', command=lambda: Cryptography1('Decrypt', decrypt1Entry, keyEntry, out)).grid(row=1, column=1) # Decrypt Btn
+    Button(frame2, text='Decrypt', command=lambda: Cryptography1('Decrypt', decrypt1Entry, KeyEntry, out)).grid(row=1, column=1) # Decrypt Btn
 
     # Decrypt option 2
     Label(frame2, text='\n\nDecrypt a file:').grid(row=2, column=0) # Description Label
     decrypt2Entry = Entry(frame2, font=('Arial', 14), width=20) # Define Entry
     decrypt2Entry.grid(row=3, column=0) # Put Entry on screen
-    Button(frame2, text='Decrypt', command=lambda: Cryptography2('Decrypt', decrypt2Entry, keyEntry, out)).grid(row=3,column=1) # Decrypt Btn
+    Button(frame2, text='Decrypt', command=lambda: Cryptography2('Decrypt', decrypt2Entry, KeyEntry, out)).grid(row=3,column=1) # Decrypt Btn
     Button(frame2, text='Browse', command=lambda: BrowseDecryptDialog(decrypt2Entry)).grid(row=3, column=2) # BrowseDecryptDialog
     logger.info('loaded decrypt options')
 
-    #Output
-    Label(root, text='Output:', font='Helvetica, 14').place(x=335, y=260)
-    out = Entry(root, font=('Arial', 14), width=27, state='readonly') # Define Entry
-    out.place(x=205 , y=290) # Put Entry on screen
-    Button(root, text='Copy', command=lambda: Copy(root, out)).place(x=505, y=290)
-    logger.info('loading complete')
+    # Output
+    frame3 = LabelFrame(root, text='Output:', font=('Arial', 12, UNDERLINE), padx=10, pady=12, borderwidth=0)
+    frame3.grid(row=3, column=0, padx=10, columnspan=2)
 
-    root.mainloop()
+    Button(frame3, text='Delete', command= lambda: Delete(out)).grid(row=0, column=0)
+    out = Entry(frame3, font=('Arial', 14), width=27, state='readonly')
+    out.grid(row=0, column=1)
+    Button(frame3, text='Copy', command=lambda: Copy(root, out)).grid(row=0, column=2)
 
-if __name__ == '__main__':
-    main()
+
+    return frame0, frame1, frame2, frame3, TitleLabel
+
+
+def Unload(frame0: LabelFrame,frame1: LabelFrame,frame2: LabelFrame,frame3: LabelFrame, TitleLabel: Label):
+    frame0.destroy()
+    frame1.destroy()
+    frame2.destroy()
+    frame3.destroy()
+    TitleLabel.destroy()

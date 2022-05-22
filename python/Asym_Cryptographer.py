@@ -7,8 +7,7 @@ import logging
 from pathlib import Path
 from os.path import expandvars, getsize
 from os import getcwd
-import requests
-from packaging.version import parse
+
 
 # logger config
 logger = logging.getLogger(__name__)
@@ -24,12 +23,10 @@ with open('Cryptographer.log', 'w') as f:
     f.write('')
 
 # streamHandler config
-debug = False
-if debug is True:
-    streamHandler = logging.StreamHandler()
-    streamHandler.setFormatter(fmt)
-    streamHandler.setLevel(logging.DEBUG)
-    logger.addHandler(streamHandler)
+streamHandler = logging.StreamHandler()
+streamHandler.setFormatter(fmt)
+streamHandler.setLevel(logging.DEBUG)
+logger.addHandler(streamHandler)
 
 
 fileTypes = (
@@ -42,8 +39,7 @@ fileTypes = (
     ('Private Key files', '*.priv_key'),
     ('Public Key files', '*.pub_key'),
 )
-version = 'v1.0.0'
-logger.info(f'Running Asymmetric Cryptographer {version}')
+
 
 class fileNotFoundError(FileNotFoundError):
     pass
@@ -52,19 +48,6 @@ class PrivKeyNotFoundError(FileNotFoundError):
 class PubKeyNotFoundError(FileNotFoundError):
     pass
 
-def CheckForUpdates():
-    try:
-        logger.info('Trying to get latest version')
-        latest = requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name']
-        logger.info('Got latest version')
-        if parse(latest) > parse(version):
-            userConfirm = messagebox.askyesno('New version available', "There's a new version available for download.\n Would you like to download it?")
-            if userConfirm:
-                
-    except Exception:
-        pass
-
-CheckForUpdates()
 def BrowseKeyDialog(keyEntry: Entry, mode: str):
     if mode == 'Private':
         type = 'priv_key'
@@ -114,13 +97,13 @@ def GenerateKeyPair(keyEntry: Entry):
         logger.info('Exited GenerateKeyPair because User generated no Keys')
 
 
-def Cryptography1(mode: str, entry: Entry, publicKeyEntry: Entry, privateKeyEntry: Entry, out: Entry):
+def Cryptography1(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntry: Entry, out: Entry):
     logger.info(f'Cryptography1 initiated in {mode} mode')
     try:
-        if publicKeyEntry.get() and privateKeyEntry.get() and entry.get():
+        if PublicKeyEntry.get() and PrivateKeyEntry.get() and entry.get():
             
             try:
-                with open(privateKeyEntry.get(), 'rb') as f:
+                with open(PrivateKeyEntry.get(), 'rb') as f:
                     content = f.read().split(b'$', 1)
                     symKey = content[0]
                     privateKey = content[1]
@@ -133,7 +116,7 @@ def Cryptography1(mode: str, entry: Entry, publicKeyEntry: Entry, privateKeyEntr
             
             if mode == 'Encrypt':
                 try:
-                    with open(publicKeyEntry.get(), 'rb') as f:
+                    with open(PublicKeyEntry.get(), 'rb') as f:
                         publicKey = f.read()
                     logger.info('Loaded Public Key')
                 except FileNotFoundError:
@@ -157,10 +140,10 @@ def Cryptography1(mode: str, entry: Entry, publicKeyEntry: Entry, privateKeyEntr
         elif entry.get() == '':
             logger.info("Finished Cryptography1 because User didn't enter a message")
             messagebox.showwarning(f'No Text to {mode} entered', f'You Need to Enter a Message Before You Try to {mode}')
-        elif publicKeyEntry.get() == '':
+        elif PublicKeyEntry.get() == '':
             logger.info("Finished Cryptography1 because User didn't enter a Public Key")
             messagebox.showwarning(f'No text to {mode} entered', f'You Need to Insert a Public Key Before You Try to {mode}')
-        elif privateKeyEntry.get() == '':
+        elif PrivateKeyEntry.get() == '':
             logger.info("Finished Cryptography1 because User didn't enter a Private Key")
             messagebox.showwarning(f'No text to {mode} entered', f'You Need to Insert a Private Key Before You Try to {mode}')
     except rsa.DecryptionError:
@@ -183,10 +166,10 @@ def Cryptography1(mode: str, entry: Entry, publicKeyEntry: Entry, privateKeyEntr
         logger.info('Cryptography1 finished')
 
         
-def Cryptography2(mode: str, entry: Entry, publicKeyEntry: Entry, privateKeyEntry: Entry, out: Entry):
+def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntry: Entry, out: Entry):
     logger.info(f'Cryptography2 initiated in {mode} mode')
     try:
-        if entry.get() and publicKeyEntry.get() and privateKeyEntry.get():
+        if entry.get() and PublicKeyEntry.get() and PrivateKeyEntry.get():
             filePath = entry.get()
             try:
                 # Checks for user conformation if file is too big
@@ -202,7 +185,7 @@ def Cryptography2(mode: str, entry: Entry, publicKeyEntry: Entry, privateKeyEntr
                 raise fileNotFoundError
             if userConfirm:
                 try:
-                    with open(privateKeyEntry.get(), 'rb') as f:
+                    with open(PrivateKeyEntry.get(), 'rb') as f:
                         content = f.read().split(b'$', 1)
                         symKey = content[0]
                         privateKey = content[1] 
@@ -220,7 +203,7 @@ def Cryptography2(mode: str, entry: Entry, publicKeyEntry: Entry, privateKeyEntr
                     output = filedialog.asksaveasfilename(initialdir=expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind("/") + 1:len(filePath.replace(extention, ""))]}', title='Save Encrypted file...', filetypes=(('Encrypted file', '*.Encrypted'),('Text file', '*.txt'),('Any file', '*.*')))
                     logger.info('got new filePath')
                     try:
-                        with open(publicKeyEntry.get(), 'rb') as f:
+                        with open(PublicKeyEntry.get(), 'rb') as f:
                             publicKey = f.read()
                         logger.info('Loaded Public Key')
                     except FileNotFoundError:
@@ -252,10 +235,10 @@ def Cryptography2(mode: str, entry: Entry, publicKeyEntry: Entry, privateKeyEntr
         elif entry.get() == '':
             logger.info("Finished Cryptography2 because User didn't enter a filePath")
             messagebox.showwarning(f'No File to {mode} entered', f'You Need to Enter a File Path Before You Try to {mode}')
-        elif publicKeyEntry.get() == '':
+        elif PublicKeyEntry.get() == '':
             logger.info("Finished Cryptography2 because User didn't enter a Public Key")
             messagebox.showwarning(f'No text to {mode} entered', f'You Need to Insert a Public Key Before You Try to {mode}')
-        elif privateKeyEntry.get() == '':
+        elif PrivateKeyEntry.get() == '':
             logger.info("Finished Cryptography2 because User didn't enter a Private Key")
             messagebox.showwarning(f'No text to {mode} entered', f'You Need to Insert a Private Key Before You Try to {mode}')
     except ValueError:
@@ -306,53 +289,52 @@ def Delete(out: Entry):
         out.config(state='readonly')
         logger.info('Delete function finished')
 
-def main():
+def main(root: Tk, version: str):
     # GUI Configuration
-    root = Tk()
-    root.title(f'Cryptographer {version}')
-    root.iconbitmap('Cryptographer.exe')
-    root.resizable(0,0)
-    Label(root, text='Asymmetric Cryptographer', font=('Helvetica', 14, BOLD, UNDERLINE)).grid(row=0, column=0, columnspan=2) # KeyLabel
+    root.title(f'Asymmetric Cryptographer {version}')
+    root.geometry('')
+    TitleLabel = Label(root, text='Asymmetric Cryptographer', font=('Helvetica', 14, BOLD, UNDERLINE))
+    TitleLabel.grid(row=0, column=0, columnspan=2)
     logger.info('loaded Tk Config')
-
+    
     # Keys Frame
     frame0 = LabelFrame(root, text='Keys', font=('Arial', 12), padx=10, pady=6)
     frame0.grid(row=1, column=0, padx=10, columnspan=2)
 
     # Public Key Input
     Label(frame0, text='Public Key:', font=('Arial', 12, UNDERLINE)).grid(row=0, column=0, columnspan=2)
-    Button(frame0, text='Browse', command=lambda: BrowseKeyDialog(publicKeyEntry, 'Public')).grid(row=1, column=0) # BrowseKeyBtn
-    publicKeyEntry = Entry(frame0, width=25, font=('Arial', 14)) # Define publicKeyEntry
-    publicKeyEntry.grid(row=1, column=1) # Put publicKeyEntry on screen
-    logger.info('loaded PublicKey input')
+    Button(frame0, text='Browse', command=lambda: BrowseKeyDialog(publicKeyEntry, 'Public')).grid(row=1, column=0)
+    publicKeyEntry = Entry(frame0, width=25, font=('Arial', 14))
+    publicKeyEntry.grid(row=1, column=1)
+    logger.info('loaded PublicKey input') # Section Loaded
     
-    Button(frame0, text='Generate Key Pair', command=lambda: GenerateKeyPair(privateKeyEntry)).grid(row=1, column=2) # BrowseKeyBtn
+    Button(frame0, text='Generate Key Pair', command=lambda: GenerateKeyPair(PrivateKeyEntry)).grid(row=1, column=2)
 
     # Private Key Input
     Label(frame0, text='Private Key:',font=('Arial', 12, UNDERLINE)).grid(row=0, column=3, columnspan=2)
-    privateKeyEntry = Entry(frame0, width=25, font=('Arial', 14)) # Define privatekeyEntry
-    privateKeyEntry.grid(row=1, column=3) # Put privatekeyEntry on screen
-    Button(frame0, text='Browse', command=lambda: BrowseKeyDialog(privateKeyEntry, 'Private')).grid(row=1, column=4) # BrowseKeyBtn
-    logger.info('loaded PrivateKey input')
+    PrivateKeyEntry = Entry(frame0, width=25, font=('Arial', 14))
+    PrivateKeyEntry.grid(row=1, column=3)
+    Button(frame0, text='Browse', command=lambda: BrowseKeyDialog(PrivateKeyEntry, 'Private')).grid(row=1, column=4)
+    logger.info('loaded PrivateKey input') # Section Loaded
 
 
-    # Encryption frame
+    # Encryption Frame
     frame1 = LabelFrame(root, text='Encrypt', font=('Arial', 12), padx=10, pady=12)
     frame1.grid(row=2, column=0, padx=10, pady=10)
 
     # Encrypt option 1
-    Label(frame1, text='Encrypt a message:').grid(row=2, column=0) # Description Label
-    encrypt1Entry = Entry(frame1, font=('Arial', 14), width=20) # Define Entry
-    encrypt1Entry.grid(row=3, column=0) # Put Entry on screen
-    Button(frame1, text='Encrypt', command=lambda: Cryptography1('Encrypt', encrypt1Entry, publicKeyEntry, privateKeyEntry, out)).grid(row=3, column=1) # Encrypt Btn
+    Label(frame1, text='Encrypt a message:').grid(row=0, column=0)
+    Encrypt1Entry = Entry(frame1, font=('Arial', 14), width=20)
+    Encrypt1Entry.grid(row=1, column=0)
+    Button(frame1, text='Encrypt', command=lambda: Cryptography1('Encrypt', Encrypt1Entry, publicKeyEntry, PrivateKeyEntry, out)).grid(row=1, column=1)
 
     # Encrypt option 2
-    Label(frame1, text='\nEncrypt a file:').grid(row=4, column=0) # Description Label
-    encrypt2Entry = Entry(frame1, font=('Arial', 14), width=20) # Define Entry
-    encrypt2Entry.grid(row=5, column=0) # Put Entry on screen
-    Button(frame1, text='Encrypt', command=lambda: Cryptography2('Encrypt', encrypt2Entry, publicKeyEntry, privateKeyEntry, out)).grid(row=5,column=1) # Encrypt Btn
-    Button(frame1, text='Browse', command=lambda: BrowseEncryptDialog(encrypt2Entry)).grid(row=5, column=2) # BrowseCryptographyDialog
-    logger.info('loaded encrypt options')
+    Label(frame1, text='\nEncrypt a file:').grid(row=2, column=0)
+    Encrypt2Entry = Entry(frame1, font=('Arial', 14), width=20)
+    Encrypt2Entry.grid(row=3, column=0)
+    Button(frame1, text='Encrypt', command=lambda: Cryptography2('Encrypt', Encrypt2Entry, publicKeyEntry, PrivateKeyEntry, out)).grid(row=3,column=1)
+    Button(frame1, text='Browse', command=lambda: BrowseEncryptDialog(Encrypt2Entry)).grid(row=3, column=2) 
+    logger.info('loaded encrypt options') # Section Loaded
 
 
     # Decryption Frame
@@ -360,31 +342,34 @@ def main():
     frame2.grid(row=2, column=1, padx=10, pady=10)
 
     # Decrypt option 1
-    Label(frame2, text='Decrypt a message:').grid(row=2, column=0) # Description Label
-    decrypt1Entry = Entry(frame2, font=('Arial', 14), width=20) # Define Entry
-    decrypt1Entry.grid(row=3, column=0) # Put Entry on screen
-    Button(frame2, text='Decrypt', command=lambda: Cryptography1('Decrypt', decrypt1Entry, publicKeyEntry, privateKeyEntry, out)).grid(row=3, column=1) # Decrypt Btn
+    Label(frame2, text='Decrypt a message:').grid(row=0, column=0)
+    Decrypt1Entry = Entry(frame2, font=('Arial', 14), width=20)
+    Decrypt1Entry.grid(row=1, column=0)
+    Button(frame2, text='Decrypt', command=lambda: Cryptography1('Decrypt', Decrypt1Entry, publicKeyEntry, PrivateKeyEntry, out)).grid(row=1, column=1)
 
     # Decrypt option 2
-    Label(frame2, text='\nDecrypt a file:').grid(row=4, column=0) # Description Label
-    decrypt2Entry = Entry(frame2, font=('Arial', 14), width=20) # Define Entry
-    decrypt2Entry.grid(row=5, column=0) # Put Entry on screen
-    Button(frame2, text='Decrypt', command=lambda: Cryptography2('Decrypt', decrypt2Entry, publicKeyEntry, privateKeyEntry, out)).grid(row=5,column=1) # Decrypt Btn
-    Button(frame2, text='Browse', command=lambda: BrowseDecryptDialog(decrypt2Entry)).grid(row=5, column=2) # BrowseDecryptDialog
-    logger.info('loaded decrypt options')
+    Label(frame2, text='\nDecrypt a file:').grid(row=2, column=0)
+    Decrypt2Entry = Entry(frame2, font=('Arial', 14), width=20)
+    Decrypt2Entry.grid(row=3, column=0)
+    Button(frame2, text='Decrypt', command=lambda: Cryptography2('Decrypt', Decrypt2Entry, publicKeyEntry, PrivateKeyEntry, out)).grid(row=3,column=1)
+    Button(frame2, text='Browse', command=lambda: BrowseDecryptDialog(Decrypt2Entry)).grid(row=3, column=2)
+    logger.info('loaded decrypt options') # Section Loaded
 
     # Output
     frame3 = LabelFrame(root, text='Output:', font=('Arial', 12, UNDERLINE), padx=10, pady=12, borderwidth=0)
     frame3.grid(row=3, column=0, padx=10, columnspan=2)
 
-    # Label(frame3, text='', font=('Helvetica', 14, UNDERLINE)).grid(row=3, column=0, columnspan=2)
     Button(frame3, text='Delete', command= lambda: Delete(out)).grid(row=0, column=0)
-    out = Entry(frame3, font=('Arial', 14), width=27, state='readonly') # Define Entry
-    out.grid(row=0, column=1) # Put Entry on screen
+    out = Entry(frame3, font=('Arial', 14), width=27, state='readonly')
+    out.grid(row=0, column=1)
     Button(frame3, text='Copy', command=lambda: Copy(root, out)).grid(row=0, column=2)
-    logger.info('loading complete')
 
-    root.mainloop()
+    return frame0, frame1, frame2, frame3, TitleLabel
 
-if __name__ == '__main__':
-    main()
+def Unload(frame0: LabelFrame,frame1: LabelFrame,frame2: LabelFrame,frame3: LabelFrame, TitleLabel: Label):
+    frame0.destroy()
+    frame1.destroy()
+    frame2.destroy()
+    frame3.destroy()
+    TitleLabel.destroy()
+
