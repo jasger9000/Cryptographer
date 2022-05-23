@@ -29,7 +29,7 @@ streamHandler.setFormatter(fmt)
 streamHandler.setLevel(logging.DEBUG)
 logger.addHandler(streamHandler)
 
-version = '0.5.0'
+version = '0.6.0'
 
 def switchSymmetric(root: Tk):
     global frameA0, frameA1, frameA2, frameA3, TitleLabelA, frameB0, frameB1, frameB2, frameB3, TitleLabelB
@@ -67,7 +67,8 @@ def CheckForUpdates():
             logger.info('Newer Version found')
             return True, latest
         else:
-            logger.info('No new version found')        
+            logger.info('No new version found')
+            return False, latest
     except Exception:
         logger.info("Couldn't connect to server")
     return None, None
@@ -96,7 +97,7 @@ def CheckForUpdates2(root: Tk):
         userConfirm = messagebox.askyesno('New version available', "There's a new version available for download.\n Would you like to download it?")
         if userConfirm:
             InstallNewUpdate(root, latest)
-    elif newUpdate is None:
+    elif latest is None:
         messagebox.showerror("Couldn't connect to server", "Couldn't check for Updates,\nbecause Connection to Github Couldn't be Established.\nPlease try again later or check if you are Connected to the Internet")
     else:
         messagebox.showinfo('No Update found', 'You are currently running the newest version of this Software')
@@ -117,9 +118,7 @@ def main():
         root.title('Version not found!')
         userConfirm = messagebox.askokcancel("Version not found", "The Software you are currently using doesn't have a Version registered to it, please reinstall the Software.\nIf you have already done this please open a issue in my github.")
         if userConfirm:
-            session = requests.Session()
-            session.auth = ('jasger9000', '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')
-            InstallNewUpdate(root, session.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
+            InstallNewUpdate(root, requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
         else:
             root.destroy()
 
