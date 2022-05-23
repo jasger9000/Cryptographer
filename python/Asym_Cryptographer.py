@@ -291,7 +291,7 @@ def Delete(out: Entry):
 
 def main(root: Tk, version: str):
     # GUI Configuration
-    root.title(f'Asymmetric Cryptographer {version}')
+    root.title(f'Asymmetric Cryptographer ver. {version}')
     root.geometry('')
     TitleLabel = Label(root, text='Asymmetric Cryptographer', font=('Helvetica', 14, BOLD, UNDERLINE))
     TitleLabel.grid(row=0, column=0, columnspan=2)

@@ -29,7 +29,7 @@ streamHandler.setFormatter(fmt)
 streamHandler.setLevel(logging.DEBUG)
 logger.addHandler(streamHandler)
 
-version = 'ver. 0.5.0'
+version = '0.5.0'
 
 def switchSymmetric(root: Tk):
     global frameA0, frameA1, frameA2, frameA3, TitleLabelA, frameB0, frameB1, frameB2, frameB3, TitleLabelB
@@ -61,7 +61,9 @@ def switchAsymmetric(root: Tk):
 def CheckForUpdates():
     try:
         logger.info('Trying to get latest version')
-        latest = requests.get('https://api.github.com/repos/Panakotta00/FicsIt-Networks/releases/latest').json()['tag_name']
+        session = requests.Session()
+        session.auth = ('jasger9000', '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')
+        latest = session.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name']
         logger.info('Got latest version')
         if parse(latest) > parse(version):
             logger.info('Newer Version found')
@@ -71,11 +73,10 @@ def CheckForUpdates():
     except Exception:
         pass
 
-def InstallNewUpdate(root: Tk):
+def InstallNewUpdate(root: Tk, latest: str):
     logger.info('Downloading Update')
-    # r = requests.get(f'https://github.com/jasger9000/Cryptographer/releases/download/{latest}/Cryptographer.zip')
     file = f'{getcwd()}/Cryptographer.zip'
-    url = f'https://github.com/Panakotta00/FicsIt-Networks/releases/download/0.3.4/Ficsit-Networks-0.3.4.zip'
+    url = f'https://github.com/jasger9000/Cryptographer/releases/download/{latest}/Cryptographer.zip'
     request.urlretrieve(url, file)
     logger.info('Update downloaded')
 
@@ -106,7 +107,7 @@ def main():
     root.resizable(0,0)
     root.geometry('300x300')
     try:
-        root.title(f'Cryptographer {version}')
+        root.title(f'Cryptographer ver. {version}')
         root.iconbitmap('Cryptographer.exe')
     except TclError:
         logger.warn("Couldn't find icon, continuing without")
@@ -115,8 +116,9 @@ def main():
         root.title('Version not found!')
         userConfirm = messagebox.askokcancel("Version not found", "The Software you are currently using doesn't have a Version registered to it, please reinstall the Software.\nIf you have already done this please open a issue in my github.")
         if userConfirm:
-                # r = requests.get(f'https://github.com/jasger9000/Cryptographer/releases/download/{latest}/Cryptographer.exe')
-                r = f'https://github.com/Panakotta00/FicsIt-Networks/releases/download/0.3.4/Ficsit-Networks-0.3.4.zip'
+            session = requests.Session()
+            session.auth = ('jasger9000', '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')
+            InstallNewUpdate(root, session.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
         else:
             root.destroy()
 
