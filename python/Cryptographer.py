@@ -61,9 +61,7 @@ def switchAsymmetric(root: Tk):
 def CheckForUpdates():
     try:
         logger.info('Trying to get latest version')
-        session = requests.Session()
-        session.auth = ('jasger9000', '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')
-        latest = session.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name']
+        latest = requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name']
         logger.info('Got latest version')
         if parse(latest) > parse(version):
             logger.info('Newer Version found')
@@ -71,7 +69,7 @@ def CheckForUpdates():
         else:
             logger.info('No new version found')        
     except Exception:
-        pass
+        logger.info("Couldn't connect to server")
     return None, None
 
 def InstallNewUpdate(root: Tk, latest: str):
@@ -93,13 +91,15 @@ def InstallNewUpdate(root: Tk, latest: str):
 
 def CheckForUpdates2(root: Tk):
     logger.info('Manual Update Checking initialised')
-    newUpdate = CheckForUpdates()
+    newUpdate, latest = CheckForUpdates()
     if newUpdate:
         userConfirm = messagebox.askyesno('New version available', "There's a new version available for download.\n Would you like to download it?")
         if userConfirm:
-            InstallNewUpdate(root)
+            InstallNewUpdate(root, latest)
+    elif newUpdate is None:
+        messagebox.showerror("Couldn't connect to server", "Couldn't check for Updates,\nbecause Connection to Github Couldn't be Established.\nPlease try again later or check if you are Connected to the Internet")
     else:
-        messagebox.showinfo('No Update found', 'There was no new Update found, that could be installed')
+        messagebox.showinfo('No Update found', 'You are currently running the newest version of this Software')
 
 
 def main():
@@ -131,7 +131,7 @@ def main():
 
     HelpMenu = Menu(menubar, tearoff=0)
     HelpMenu.add_command(label='Open Github Page', command=lambda: webbrowser.open('https://github.com/jasger9000/Cryptographer'))
-    HelpMenu.add_command(label='Check For Updates', command=lambda: CheckForUpdates2())
+    HelpMenu.add_command(label='Check For Updates', command=lambda: CheckForUpdates2(root))
     menubar.add_cascade(label='Help', menu=HelpMenu)
     root.config(menu=menubar)
 
@@ -148,4 +148,3 @@ if __name__ == '__main__':
     main()
 
 # TODO Save which state was last used
-# TODO Check for Updates Btn
