@@ -67,11 +67,12 @@ def CheckForUpdates():
         logger.info('Got latest version')
         if parse(latest) > parse(version):
             logger.info('Newer Version found')
-            return True
+            return True, latest
         else:
             logger.info('No new version found')        
     except Exception:
         pass
+    return None, None
 
 def InstallNewUpdate(root: Tk, latest: str):
     logger.info('Downloading Update')
@@ -87,7 +88,7 @@ def InstallNewUpdate(root: Tk, latest: str):
     if path.exists(file):
         remove(file)
     logger.info('Finished installing, restarting now')
-    startfile('Cryptographer.exe')
+    startfile(f'{getcwd()}/Cryptographer.exe')
     root.destroy()
 
 def CheckForUpdates2(root: Tk):
@@ -134,11 +135,11 @@ def main():
     menubar.add_cascade(label='Help', menu=HelpMenu)
     root.config(menu=menubar)
 
-    newUpdate = CheckForUpdates()
+    newUpdate, latest = CheckForUpdates()
     if newUpdate:
         userConfirm = messagebox.askyesno('New version available', "There's a new version available for download.\n Would you like to download it?")
         if userConfirm:
-            InstallNewUpdate(root)
+            InstallNewUpdate(root, latest)
 
     root.mainloop()
 
