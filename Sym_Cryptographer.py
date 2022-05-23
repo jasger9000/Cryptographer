@@ -249,7 +249,7 @@ def Delete(out: Entry):
 
 def main(root: Tk, version: str):
     # GUI Configuration
-    root.title(f'Symmetric Cryptographer {version}')
+    root.title(f'Symmetric Cryptographer ver. {version}')
     root.geometry('')
     TitleLabel = Label(root, text='Symmetric Cryptographer', font=('Helvetica', 14, BOLD, UNDERLINE))
     TitleLabel.grid(row=0, column=0, columnspan=2)

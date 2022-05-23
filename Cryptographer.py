@@ -29,7 +29,7 @@ streamHandler.setFormatter(fmt)
 streamHandler.setLevel(logging.DEBUG)
 logger.addHandler(streamHandler)
 
-version = 'ver. 0.5.0'
+version = '0.6.0'
 
 def switchSymmetric(root: Tk):
     global frameA0, frameA1, frameA2, frameA3, TitleLabelA, frameB0, frameB1, frameB2, frameB3, TitleLabelB
@@ -61,21 +61,22 @@ def switchAsymmetric(root: Tk):
 def CheckForUpdates():
     try:
         logger.info('Trying to get latest version')
-        latest = requests.get('https://api.github.com/repos/Panakotta00/FicsIt-Networks/releases/latest').json()['tag_name']
+        latest = requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name']
         logger.info('Got latest version')
         if parse(latest) > parse(version):
             logger.info('Newer Version found')
-            return True
+            return True, latest
         else:
-            logger.info('No new version found')        
+            logger.info('No new version found')
+            return False, latest
     except Exception:
-        pass
+        logger.info("Couldn't connect to server")
+    return None, None
 
-def InstallNewUpdate(root: Tk):
+def InstallNewUpdate(root: Tk, latest: str):
     logger.info('Downloading Update')
-    # r = requests.get(f'https://github.com/jasger9000/Cryptographer/releases/download/{latest}/Cryptographer.zip')
     file = f'{getcwd()}/Cryptographer.zip'
-    url = f'https://github.com/Panakotta00/FicsIt-Networks/releases/download/0.3.4/Ficsit-Networks-0.3.4.zip'
+    url = f'https://github.com/jasger9000/Cryptographer/releases/download/{latest}/Cryptographer.zip'
     request.urlretrieve(url, file)
     logger.info('Update downloaded')
 
@@ -86,18 +87,20 @@ def InstallNewUpdate(root: Tk):
     if path.exists(file):
         remove(file)
     logger.info('Finished installing, restarting now')
-    startfile('Cryptographer.exe')
+    startfile(f'{getcwd()}/Cryptographer.exe')
     root.destroy()
 
 def CheckForUpdates2(root: Tk):
     logger.info('Manual Update Checking initialised')
-    newUpdate = CheckForUpdates()
+    newUpdate, latest = CheckForUpdates()
     if newUpdate:
         userConfirm = messagebox.askyesno('New version available', "There's a new version available for download.\n Would you like to download it?")
         if userConfirm:
-            InstallNewUpdate(root)
+            InstallNewUpdate(root, latest)
+    elif latest is None:
+        messagebox.showerror("Couldn't connect to server", "Couldn't check for Updates,\nbecause Connection to Github Couldn't be Established.\nPlease try again later or check if you are Connected to the Internet")
     else:
-        messagebox.showinfo('No Update found', 'There was no new Update found, that could be installed')
+        messagebox.showinfo('No Update found', 'You are currently running the newest version of this Software')
 
 
 def main():
@@ -106,7 +109,7 @@ def main():
     root.resizable(0,0)
     root.geometry('300x300')
     try:
-        root.title(f'Cryptographer {version}')
+        root.title(f'Cryptographer ver. {version}')
         root.iconbitmap('Cryptographer.exe')
     except TclError:
         logger.warn("Couldn't find icon, continuing without")
@@ -115,8 +118,7 @@ def main():
         root.title('Version not found!')
         userConfirm = messagebox.askokcancel("Version not found", "The Software you are currently using doesn't have a Version registered to it, please reinstall the Software.\nIf you have already done this please open a issue in my github.")
         if userConfirm:
-                # r = requests.get(f'https://github.com/jasger9000/Cryptographer/releases/download/{latest}/Cryptographer.exe')
-                r = f'https://github.com/Panakotta00/FicsIt-Networks/releases/download/0.3.4/Ficsit-Networks-0.3.4.zip'
+            InstallNewUpdate(root, requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
         else:
             root.destroy()
 
@@ -128,15 +130,15 @@ def main():
 
     HelpMenu = Menu(menubar, tearoff=0)
     HelpMenu.add_command(label='Open Github Page', command=lambda: webbrowser.open('https://github.com/jasger9000/Cryptographer'))
-    HelpMenu.add_command(label='Check For Updates', command=lambda: CheckForUpdates2())
+    HelpMenu.add_command(label='Check For Updates', command=lambda: CheckForUpdates2(root))
     menubar.add_cascade(label='Help', menu=HelpMenu)
     root.config(menu=menubar)
 
-    newUpdate = CheckForUpdates()
+    newUpdate, latest = CheckForUpdates()
     if newUpdate:
         userConfirm = messagebox.askyesno('New version available', "There's a new version available for download.\n Would you like to download it?")
         if userConfirm:
-            InstallNewUpdate(root)
+            InstallNewUpdate(root, latest)
 
     root.mainloop()
 
@@ -145,4 +147,3 @@ if __name__ == '__main__':
     main()
 
 # TODO Save which state was last used
-# TODO Check for Updates Btn
