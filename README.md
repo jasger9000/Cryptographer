@@ -6,7 +6,7 @@
 [![GitHub release](https://img.shields.io/github/release/jasger9000/Cryptographer/all.svg)](https://github.com/jasger9000/Cryptographer/releases)
 [![Github all releases](https://img.shields.io/github/downloads/jasger9000/Cryptographer/total.svg)](https://github.com/jasger9000/Cryptographer/releases)
 [![GitHub stars](https://img.shields.io/github/stars/jasger9000/lively.svg)](https://github.com/jasger9000/Cryptographer/stargazers)
-[![Issues](https://img.shields.io/[github/issues/jasger9000/Cryptographer.svg](https://img.shields.io))](https://github.com/jasger9000/Cryptographer/issues)
+[![Issues](https://img.shields.io/github/issues/jasger9000/Cryptographer.svg)](https://github.com/jasger9000/Cryptographer/issues)
 
 ## Contents
 - [About](#about)
