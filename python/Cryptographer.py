@@ -1,13 +1,14 @@
 import Asym_Cryptographer
 import Sym_Cryptographer
-from tkinter import messagebox, Tk, Menu, TclError
+from tkinter import Label, messagebox, Tk, Menu, TclError
 import logging
 import requests
 from packaging.version import parse
 import webbrowser
 from urllib import request
-from os import getcwd, remove, path, startfile
+from os import getcwd, remove, path
 import zipfile
+from subprocess import Popen
 
 
 # logger config
@@ -42,7 +43,7 @@ def switchSymmetric(root: Tk):
         except NameError:
             pass
         frameA0, frameA1, frameA2, frameA3, TitleLabelA = Sym_Cryptographer.main(root, version)
-    logger.info('switching complete')
+        logger.info('switching complete')
 
 def switchAsymmetric(root: Tk):
     global frameA0, frameA1, frameA2, frameA3, TitleLabelA, frameB0, frameB1, frameB2, frameB3, TitleLabelB
@@ -55,7 +56,7 @@ def switchAsymmetric(root: Tk):
         except NameError:
             pass
         frameB0, frameB1, frameB2, frameB3, TitleLabelB = Asym_Cryptographer.main(root, version)
-    logger.info('switching complete')
+        logger.info('switching complete')
 
 
 def CheckForUpdates():
@@ -87,7 +88,7 @@ def InstallNewUpdate(root: Tk, latest: str):
     if path.exists(file):
         remove(file)
     logger.info('Finished installing, restarting now')
-    startfile(f'{getcwd()}/Cryptographer.exe')
+    Popen(f'explorer "{getcwd()}/Cryptographer.exe"')
     root.destroy()
 
 def CheckForUpdates2(root: Tk):
@@ -112,7 +113,7 @@ def main():
         root.title(f'Cryptographer ver. {version}')
         root.iconbitmap('Cryptographer.exe')
     except TclError:
-        logger.warn("Couldn't find icon, continuing without")
+        logger.warning("Couldn't find icon, continuing without")
     except NameError:
         logger.error("Could not find Version variable, corruption likely")
         root.title('Version not found!')
@@ -124,14 +125,27 @@ def main():
 
     menubar = Menu(root)
     ModeMenu = Menu(menubar, tearoff=0)
+    
+    # Mode Menu
     ModeMenu.add_command(label='Symmetric', command=lambda: switchSymmetric(root))
     ModeMenu.add_command(label='Asymmetric', command=lambda: switchAsymmetric(root))
     menubar.add_cascade(label='Mode', menu=ModeMenu)
 
+    # History Menu
+    HistoryMenu = Menu(menubar, tearoff=0)
+    menubar.add_cascade(label='History', menu=HistoryMenu)
+    
+    # Help Menu
     HelpMenu = Menu(menubar, tearoff=0)
     HelpMenu.add_command(label='Open Github Page', command=lambda: webbrowser.open('https://github.com/jasger9000/Cryptographer'))
+    HelpMenu.add_command(label='Open Installation Path', command=lambda: Popen(f'explorer "{getcwd()}"'))
+    HelpMenu.add_separator()
+    HelpMenu.add_command(label='Settings')
+    HelpMenu.add_separator()
+    HelpMenu.add_command(label='About')
     HelpMenu.add_command(label='Check For Updates', command=lambda: CheckForUpdates2(root))
     menubar.add_cascade(label='Help', menu=HelpMenu)
+    
     root.config(menu=menubar)
 
     newUpdate, latest = CheckForUpdates()
