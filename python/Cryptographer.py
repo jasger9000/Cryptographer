@@ -30,7 +30,7 @@ streamHandler.setFormatter(fmt)
 streamHandler.setLevel(logging.DEBUG)
 logger.addHandler(streamHandler)
 
-version = '0.6.0'
+# version = '0.6.0'
 
 def switchSymmetric(root: Tk):
     global frameA0, frameA1, frameA2, frameA3, TitleLabelA, frameB0, frameB1, frameB2, frameB3, TitleLabelB
@@ -88,7 +88,7 @@ def InstallNewUpdate(root: Tk, latest: str):
     if path.exists(file):
         remove(file)
     logger.info('Finished installing, restarting now')
-    Popen(f'explorer "{getcwd()}/Cryptographer.exe"')
+    Popen(f'"{getcwd()}/Cryptographer.exe"')
     root.destroy()
 
 def CheckForUpdates2(root: Tk):
