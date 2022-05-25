@@ -47,7 +47,7 @@ def OpenSettings():
     Settings.focus()
     Settings.transient(root)
     Settings.grab_set()
-    Settings.geometry('300x300')
+    Settings.geometry('800x800')
 
     # Language Setting
     Label(Settings, text=lang.SettingsLabels['LangLabel'], fg="#e8eaed", bg='#202124').grid(row=0, column=0, padx=10, pady=12)
@@ -61,9 +61,16 @@ def OpenSettings():
     # Save key?
     Label(Settings, text=lang.SettingsLabels['RememberKeyLabel'], background='#202124', foreground='#e8eaed').grid(row=1, column=0)
     saveKey = IntVar()
-    Checkbutton(Settings, variable=saveKey, onvalue=True, offvalue=False, command=lambda: UpdateConfig(), background='#202124').grid(row=1, column=1) # Also need to save State
+    saveKey.set(config['Settings']['Save Last Key'])
+    Checkbutton(Settings, variable=saveKey, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'Save Last Key', str(saveKey.get())), background='#202124').grid(row=1, column=1) # Also need to save State
 
-    Button(Settings, text=lang.SettingsLabels['ApplyBtn'], command=lambda: [root.destroy(), main()]).grid(row=2, column=1)
+    # Automatic CFU?
+    Label(Settings, text=lang.SettingsLabels['AutoCFULabel'], background='#202124', foreground='#e8eaed').grid(row=2, column=0)
+    autoCFU = IntVar()
+    autoCFU.set(config['Settings']['CFU at startup'])
+    Checkbutton(Settings, variable=autoCFU, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'CFU at startup', str(autoCFU.get())), background='#202124').grid(row=2, column=1)
+
+    Button(Settings, text=lang.SettingsLabels['ApplyBtn'], command=lambda: [root.destroy(), main()]).grid(row=15, column=1)
     root.wait_window()
 
 
@@ -76,7 +83,7 @@ def InstallNewLanguage():
 def switchSymmetric():
     global frameA0, frameA1, frameA2, frameA3, TitleLabelA
     
-    if loaded is True and config['State']['Mode'] != 'Symmetric':
+    if loaded is True and config['State']['Mode'] == 'Asymmetric':
         Asym_Cryptographer.Unload(frameB0, frameB1, frameB2, frameB3, TitleLabelB)
 
     if loaded is False or config['State']['Mode'] != 'Symmetric':      
@@ -88,7 +95,7 @@ def switchSymmetric():
 def switchAsymmetric():
     global frameB0, frameB1, frameB2, frameB3, TitleLabelB
     
-    if loaded is True and config['State']['Mode'] != 'Asymmetric':
+    if loaded is True and config['State']['Mode'] == 'Symmetric':
         Sym_Cryptographer.Unload(frameA0, frameA1, frameA2, frameA3, TitleLabelA)
 
     if loaded is False or config['State']['Mode'] != 'Asymmetric':   
@@ -158,8 +165,8 @@ def main():
     except NameError:
         logger.error("Could not find Version variable, corruption likely")
         root.title(lang.VersionNotFound['Title'])
-        userConfirm = messagebox.askokcancel(lang.VersionNotFound['Title'], lang.VersionNotFound['Message'])
         root.bell()
+        userConfirm = messagebox.askokcancel(lang.VersionNotFound['Title'], lang.VersionNotFound['Message'])
         if userConfirm:
             InstallNewUpdate(requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
         else:
@@ -190,12 +197,11 @@ def main():
 
     root.config(menu=menubar)
     
-    if config['Settings']['CFU at startup']:
+    if config['Settings']['CFU at startup'] == 1:
         threading.Thread(target=lambda: CheckForUpdates('automatic')).start()
 
     loaded = True
     root.mainloop()
-
 
 
 def LoadLang(l: str):
@@ -213,6 +219,7 @@ def LoadLang(l: str):
         lang = importlib.import_module(f'Languages.English')
     except NameError:
         pass
+
 
 def LoadConfig():
     global config
@@ -233,9 +240,9 @@ def LoadConfig():
         logger.warning('Config not found, generating new')
         config.add_section('Settings')
         config.set('Settings', 'Language', 'English')
-        config.set('Settings', 'Save Last Key', 'False')
+        config.set('Settings', 'Save Last Key', '0')
         config.set('Settings', 'Password', 'False')
-        config.set('Settings', 'CFU at startup', 'True')
+        config.set('Settings', 'CFU at startup', '1')
         config.set('Settings', 'Mode', 'Light')
         config.set('Settings', 'Default Path', os.path.expandvars(R'C:\Users\$USERNAME\Documents'))
         
@@ -252,6 +259,7 @@ def LoadConfig():
         logger.info('New Config generated')
     return config
 
+
 def UpdateConfig(Section: str, Option: str, Value: str):
     config.set(Section, Option, Value)
     with open('config.ini', 'w') as f:
@@ -266,4 +274,7 @@ if __name__ == '__main__':
     # TODO Password
     # TODO Make VersionNotFound Window always focused
     # TODO Make installation Progress Bar
+    # TODO History
+    # TODO Light/dark mode
+    # TODO Default Path
     main()
