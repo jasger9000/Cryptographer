@@ -149,6 +149,7 @@ def main():
     root = Tk()
     root.resizable(0,0)
     root.geometry('300x300')
+    LoadConfig()
     try:
         root.title(f'Cryptographer ver. {version}')
         root.iconbitmap('Cryptographer.exe')
@@ -163,7 +164,6 @@ def main():
             InstallNewUpdate(requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
         else:
             root.destroy()
-    LoadConfig()
 
     menubar = Menu(root)
     ModeMenu = Menu(menubar, tearoff=0)
