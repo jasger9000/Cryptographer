@@ -1,14 +1,10 @@
-from tkinter import UNDERLINE, filedialog, messagebox, Tk, Label, Button, Entry, LabelFrame
-from tkinter.font import BOLD
+from tkinter import UNDERLINE, filedialog, messagebox, Tk, Label, Button, Entry, LabelFrame, font
 from cryptography.fernet import Fernet
 import rsa
 import base64
 import logging
-from pathlib import Path
-from os.path import expandvars, getsize
-from os import getcwd
-
-
+import pathlib
+import os
 # logger config
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -53,21 +49,21 @@ def BrowseKeyDialog(keyEntry: Entry, mode: str):
         type = 'priv_key'
     else:
         type = 'pub_key'
-    browseKeyDialog = filedialog.askopenfilename(initialdir=expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Open {mode} Key...', filetypes=((f'{mode} Key files', f'*.{type}'), fileTypes[4]))
+    browseKeyDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Open {mode} Key...', filetypes=((f'{mode} Key files', f'*.{type}'), fileTypes[4]))
     if browseKeyDialog:
         logger.info(f'User selected {mode} ')
         keyEntry.delete(0,"end")
         keyEntry.insert(0, browseKeyDialog)
 
 def BrowseEncryptDialog(encrypt2Entry: Entry):
-    browseEncryptDialog = filedialog.askopenfilename(initialdir=expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Encrypt...', filetypes=(fileTypes[0], fileTypes[1], fileTypes[2], fileTypes[3], fileTypes[4]))
+    browseEncryptDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Encrypt...', filetypes=(fileTypes[0], fileTypes[1], fileTypes[2], fileTypes[3], fileTypes[4]))
     if browseEncryptDialog:
         logger.info('User selected file to Encrypt')
         encrypt2Entry.delete(0,"end")
         encrypt2Entry.insert(0, browseEncryptDialog)
 
 def BrowseDecryptDialog(decrypt2Entry: Entry):
-    browseDecryptDialog = filedialog.askopenfilename(initialdir=expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Decrypt...', filetypes=(fileTypes[5], fileTypes[0]))
+    browseDecryptDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Decrypt...', filetypes=(fileTypes[5], fileTypes[0]))
     if browseDecryptDialog:
         logger.info('User selected file to Decrypt')
         decrypt2Entry.delete(0,"end")
@@ -75,9 +71,9 @@ def BrowseDecryptDialog(decrypt2Entry: Entry):
 
 def GenerateKeyPair(keyEntry: Entry):
     logger.info('Initiated GenerateKeyPair')
-    publickeyPath = filedialog.asksaveasfilename(initialdir=expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=expandvars("$USERNAME's Public Key"), title='Save new Key...', filetypes=(fileTypes[7], fileTypes[4]))
+    publickeyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=os.path.expandvars("$USERNAME's Public Key"), title='Save new Key...', filetypes=(fileTypes[7], fileTypes[4]))
     if publickeyPath:
-        privateKeyPath = filedialog.asksaveasfilename(initialdir=expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile="Private Key", title='Save new Key...', filetypes=(fileTypes[6], fileTypes[4]))
+        privateKeyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile="Private Key", title='Save new Key...', filetypes=(fileTypes[6], fileTypes[4]))
         if privateKeyPath:
             Keys = rsa.newkeys(2048)
             Keys += (Fernet.generate_key(), )
@@ -159,7 +155,7 @@ def Cryptography1(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
         messagebox.showwarning(title=f'Key not found', message=f"The Private Key You tried to Use Does Not Exist!\nPlease use an Existing Key!")
         logger.info(f"The Private Key the User tried to Use does Not Exist")
     except Exception:
-        messagebox.showerror(title='Unknown Error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {getcwd()}/Cryptographer.log')
+        messagebox.showerror(title='Unknown Error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {os.getcwd()}/Cryptographer.log')
         logger.exception(f'Unknown error/uncaught exception in Cryptography1 - {mode} mode')
     finally:
         out.config(state='readonly')
@@ -173,10 +169,10 @@ def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
             filePath = entry.get()
             try:
                 # Checks for user conformation if file is too big
-                if getsize(filePath) >= 1073741824:
+                if os.path.getsize(filePath) >= 1073741824:
                     logger.info(f'shows askYesNoPrompt1 in Cryptography2 {mode} mode')
                     userConfirm = messagebox.askyesno(title='file too big', message=f'File larger than 1 Gigabyte will take several minutes to {mode} or will fail,\nwould you still like to proceed?')
-                elif getsize(filePath) >= 100000000:
+                elif os.path.getsize(filePath) >= 100000000:
                     logger.info(f'shows askYesNoPrompt2 in Cryptography2 {mode} mode')
                     userConfirm = messagebox.askyesno(title='file too big', message=f'File larger than 100mb could take a long time to {mode},\nwould you still like to proceed?')
                 else:
@@ -199,8 +195,8 @@ def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
                 logger.info('Loaded File Contents')
                 
                 if mode == 'Encrypt':
-                    extention = Path(filePath).suffix
-                    output = filedialog.asksaveasfilename(initialdir=expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind("/") + 1:len(filePath.replace(extention, ""))]}', title='Save Encrypted file...', filetypes=(('Encrypted file', '*.Encrypted'),('Text file', '*.txt'),('Any file', '*.*')))
+                    extention = pathlib.Path(filePath).suffix
+                    output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind("/") + 1:len(filePath.replace(extention, ""))]}', title='Save Encrypted file...', filetypes=(('Encrypted file', '*.Encrypted'),('Text file', '*.txt'),('Any file', '*.*')))
                     logger.info('got new filePath')
                     try:
                         with open(PublicKeyEntry.get(), 'rb') as f:
@@ -222,7 +218,7 @@ def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
                     contents[2] = symKey.decrypt(base64.b64decode(contents[2])).decode()
                     logger.info('Decrypted Contents')
 
-                    output = filedialog.asksaveasfilename(initialdir=expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind("/") + 1:len(filePath.replace(Path(filePath).suffix, ''))], title='Save Decrypted file...', filetypes=(('Decrypted file',f'*{base64.b64decode(contents[0]).decode()}' ),('Any file', '*.*')))
+                    output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind("/") + 1:len(filePath.replace(pathlib.Path(filePath).suffix, ''))], title='Save Decrypted file...', filetypes=(('Decrypted file',f'*{base64.b64decode(contents[0]).decode()}' ),('Any file', '*.*')))
                     logger.info('Got New filePath')
                     with open(output, 'w') as f:
                         f.write(contents[2])
@@ -260,7 +256,7 @@ def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
         messagebox.showwarning(title=f'Key not found', message=f"The Private Key You tried to Use Does Not Exist!\nPlease use an Existing Key!")
         logger.info(f"The Private Key the User tried to Use does Not Exist")
     except Exception:
-        messagebox.showerror(title='Unknown Error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {getcwd()}/Cryptographer.log')
+        messagebox.showerror(title='Unknown Error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {os.getcwd()}/Cryptographer.log')
         logger.exception(f'Unknown error/uncaught exception in Cryptography2 - {mode} mode')
     finally:
         out.config(state='readonly')
@@ -273,7 +269,7 @@ def Copy(root: Tk, out: Entry):
         root.clipboard_append(out.get())
     except Exception:
         logger.exception(f'Unknown error/uncaught exception in Copy function')
-        messagebox.showerror(title='Unknown error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {getcwd()}/Cryptographer.log')
+        messagebox.showerror(title='Unknown error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {os.getcwd()}/Cryptographer.log')
     finally:
         logger.info('Copy function finished')
 
@@ -284,7 +280,7 @@ def Delete(out: Entry):
         out.delete(0, 'end')
     except Exception:
         logger.exception(f'Unknown/uncaught exception in Delete function')
-        messagebox.showerror(title='Unknown Error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {getcwd()}/Cryptographer.log')
+        messagebox.showerror(title='Unknown Error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {os.getcwd()}/Cryptographer.log')
     finally:
         out.config(state='readonly')
         logger.info('Delete function finished')
@@ -293,7 +289,7 @@ def main(root: Tk, version: str):
     # GUI Configuration
     root.title(f'Asymmetric Cryptographer ver. {version}')
     root.geometry('')
-    TitleLabel = Label(root, text='Asymmetric Cryptographer', font=('Helvetica', 14, BOLD, UNDERLINE))
+    TitleLabel = Label(root, text='Asymmetric Cryptographer', font=('Helvetica', 14, font.BOLD, UNDERLINE))
     TitleLabel.grid(row=0, column=0, columnspan=2)
     logger.info('loaded Tk Config')
     

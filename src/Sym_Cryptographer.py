@@ -1,12 +1,8 @@
-from tkinter import UNDERLINE, filedialog, messagebox, Tk, Label, Button, Entry, LabelFrame
-from tkinter.font import BOLD
+from tkinter import UNDERLINE, filedialog, messagebox, Tk, Label, Button, Entry, LabelFrame, font
 from cryptography.fernet import Fernet, InvalidToken
-from pathlib import Path
+import pathlib
 import logging
-from os.path import expandvars, getsize
-from os import getcwd
-
-# TODO Make User send log to me
+import os
 
 # logger config
 logger = logging.getLogger(__name__)
@@ -37,7 +33,7 @@ pictureFiles = '*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp', '*.raw', '*.tiff', 
 
 
 def BrowseKeyDialog(keyEntry):
-    browseKeyDialog = filedialog.askopenfilename(initialdir=expandvars(R'C:\Users\$USERNAME\Documents'), title='Open Key...', filetypes=(('Key files', '*.key'),('All files', '*.*')))
+    browseKeyDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title='Open Key...', filetypes=(('Key files', '*.key'),('All files', '*.*')))
     if browseKeyDialog:
         logger.info('User selected key')
         keyEntry.delete(0,"end")
@@ -46,7 +42,7 @@ def BrowseKeyDialog(keyEntry):
 
 def BrowseEncryptDialog(encrypt2Entry):
     global textFiles
-    browseEncryptDialog = filedialog.askopenfilename(initialdir=expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Encrypt...', filetypes=(('Text files', textFiles), ('Video files', videoFiles), ('Audio files', audioFiles),('Picture files', pictureFiles), ('Pdf files', '*.pdf'), ('All files', '*.*')))
+    browseEncryptDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Encrypt...', filetypes=(('Text files', textFiles), ('Video files', videoFiles), ('Audio files', audioFiles),('Picture files', pictureFiles), ('Pdf files', '*.pdf'), ('All files', '*.*')))
     if browseEncryptDialog:
         logger.info('User selected file to Encrypt')
         encrypt2Entry.delete(0,"end")
@@ -54,7 +50,7 @@ def BrowseEncryptDialog(encrypt2Entry):
     return
 
 def BrowseDecryptDialog(decrypt2Entry):
-    browseDecryptDialog = filedialog.askopenfilename(initialdir=expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Decrypt...', filetypes=(('Encrypted Files', '*.Encrypted'), ('Text files', textFiles), ('All files', '*.*')))
+    browseDecryptDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Decrypt...', filetypes=(('Encrypted Files', '*.Encrypted'), ('Text files', textFiles), ('All files', '*.*')))
     if browseDecryptDialog:
         logger.info('User selected file to Decrypt')
         decrypt2Entry.delete(0,"end")
@@ -62,7 +58,7 @@ def BrowseDecryptDialog(decrypt2Entry):
     return 
 
 def GenerateKey(keyEntry):
-    keyPath = filedialog.asksaveasfilename(initialdir=expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile='Key', title='Save new Key...', filetypes=(('Key files', '*.key'),('All files', '*.*')))
+    keyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile='Key', title='Save new Key...', filetypes=(('Key files', '*.key'),('All files', '*.*')))
     if keyPath:
         logger.info('User generated key')
         keyEntry.delete(0,"end")
@@ -130,10 +126,10 @@ def Cryptography2(mode: str, entry, keyEntry, out):
     if len(keyPath) != 0 and len(filePath) != 0:
         try:
             # Checks for user conformation if file is too big
-            if getsize(filePath) >= 1073741824:
+            if os.path.getsize(filePath) >= 1073741824:
                 logger.info(f'shows askYesNoPrompt1 in Cryptography2 {mode} mode')
                 userConfirm = messagebox.askyesno(title='file too big', message=f'File larger than 1 Gigabyte will take several minutes to {mode} or will fail,\nwould you still like to proceed?')
-            elif getsize(filePath) >= 100000000:
+            elif os.path.getsize(filePath) >= 100000000:
                 logger.info(f'shows askYesNoPrompt2 in Cryptography2 {mode} mode')
                 userConfirm = messagebox.askyesno(title='file too big', message=f'File larger than 100mb could take a long time to {mode},\nwould you still like to proceed?')
             else:
@@ -167,9 +163,9 @@ def Cryptography2(mode: str, entry, keyEntry, out):
                     # Encrypts or Decrypts the file, creates filePath2 + some other variables and deletes fileContents and filePath out of Memory
                     if mode == 'Encrypt':
                         fileContents = k.encrypt(fileContents)
-                        fileExtention = Path(filePath).suffix
+                        fileExtention = pathlib.Path(filePath).suffix
                         pathLength2 = len(filePath.replace(fileExtention, ''))
-                        filePath2 = filedialog.asksaveasfilename(initialdir=expandvars(filePath[0:filePath.rfind(seperator) + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind(seperator) + 1:pathLength2]}', title='Save Encrypted file...', filetypes=(('Encrypted file', '*.Encrypted'),('Text file', '*.txt'),('Any file', '*.*')))
+                        filePath2 = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind(seperator) + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind(seperator) + 1:pathLength2]}', title='Save Encrypted file...', filetypes=(('Encrypted file', '*.Encrypted'),('Text file', '*.txt'),('Any file', '*.*')))
                         # writes encrypted Contents to file
                         if filePath2:
                             logger.info('Encrypts and saves file')
@@ -182,8 +178,8 @@ def Cryptography2(mode: str, entry, keyEntry, out):
                         fileContents = fileContents.decode().split('$', 1)
                         extention = fileContents[0]
                         fileContents = k.decrypt(fileContents[1].encode())
-                        pathLength2 = len(filePath.replace(Path(filePath).suffix, ''))
-                        filePath2 = filedialog.asksaveasfilename(initialdir=expandvars(filePath[0:filePath.rfind(seperator) + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind(seperator) + 1:pathLength2], title='Save Decrypted file...', filetypes=(('Decrypted file',f'*{extention}' ),('Any file', '*.*')))
+                        pathLength2 = len(filePath.replace(pathlib.Path(filePath).suffix, ''))
+                        filePath2 = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind(seperator) + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind(seperator) + 1:pathLength2], title='Save Decrypted file...', filetypes=(('Decrypted file',f'*{extention}' ),('Any file', '*.*')))
                         if filePath2:
                             logger.info('Decrypts and saves file')
                             with open(filePath2, 'wb') as f:
@@ -231,7 +227,7 @@ def Copy(root: Tk, out: Entry):
         root.clipboard_append(out.get())
     except Exception:
         logger.exception(f'Unknown error/uncaught exception in Copy function')
-        messagebox.showerror(title='Unknown error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {getcwd()}/Cryptographer.log')
+        messagebox.showerror(title='Unknown error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {os.getcwd()}/Cryptographer.log')
     finally:
         logger.info('Copy function finished')
 
@@ -242,7 +238,7 @@ def Delete(out: Entry):
         out.delete(0, 'end')
     except Exception:
         logger.exception(f'Unknown/uncaught exception in Delete function')
-        messagebox.showerror(title='Unknown Error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {getcwd()}/Cryptographer.log')
+        messagebox.showerror(title='Unknown Error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {os.getcwd()}/Cryptographer.log')
     finally:
         out.config(state='readonly')
         logger.info('Delete function finished')
@@ -251,7 +247,7 @@ def main(root: Tk, version: str):
     # GUI Configuration
     root.title(f'Symmetric Cryptographer ver. {version}')
     root.geometry('')
-    TitleLabel = Label(root, text='Symmetric Cryptographer', font=('Helvetica', 14, BOLD, UNDERLINE))
+    TitleLabel = Label(root, text='Symmetric Cryptographer', font=('Helvetica', 14, font.BOLD, UNDERLINE))
     TitleLabel.grid(row=0, column=0, columnspan=2)
     logger.info('loaded Tk Config')
 
