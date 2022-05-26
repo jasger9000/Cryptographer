@@ -1,3 +1,4 @@
+import base64
 from tkinter import UNDERLINE, filedialog, messagebox, Tk, Label, Button, Entry, LabelFrame, font
 from cryptography.fernet import Fernet, InvalidToken
 import pathlib
@@ -26,39 +27,45 @@ if debug is True:
     logger.addHandler(streamHandler)
 
 
-textFiles = '*.txt', '*.doc', '*.docx', '*.log', '*.msg', '*.odt', '*.pages', '*.rtf', '*.tex', '*.wpd', '*.wps'
-videoFiles = '*.mp4', '*.mov', '*.avi', '*.flv', '*.mkv', '*.wmv', '*.avchd', '*.webm', '*MPEG-4', '*.H.264'
-audioFiles = '*.aif', '*.aiff', '*.iff', '*.m3u', '*.m4a', '*.mp3', '*.mpa', '*.wav', '*.wma', '*.aup3', '*.aup', '*.ogg', '*.mp2'
-pictureFiles = '*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp', '*.raw', '*.tiff', '*.psd', '*.cr2'
+fileTypes = (
+    ('Text Files', ('*.txt', '*.doc', '*.docx', '*.log', '*.msg', '*.odt', '*.pages', '*.rtf', '*.tex', '*.wpd', '*.wps')),
+    ('Video Files', ('*.mp4', '*.mov', '*.avi', '*.flv', '*.mkv', '*.wmv', '*.avchd', '*.webm', '*MPEG-4', '*.H.264')),
+    ('Audio Files', ('*.aif', '*.aiff', '*.iff', '*.m3u', '*.m4a', '*.mp3', '*.mpa', '*.wav', '*.wma', '*.aup3', '*.aup', '*.ogg', '*.mp2')),
+    ('Picture Files', ('*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp', '*.raw', '*.tiff', '*.psd', '*.cr2')),
+    ('All Files', '*.*'),
+    ('Encrypted Files', '*.Encrypted'),
+    ('Key files', '*.key')
+)
+
+class fileNotFoundError(FileNotFoundError):
+    pass
+class KeyNotFoundError(FileNotFoundError):
+    pass
 
 
-def BrowseKeyDialog(keyEntry):
-    browseKeyDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title='Open Key...', filetypes=(('Key files', '*.key'),('All files', '*.*')))
+def BrowseKeyDialog(keyEntry: Entry):
+    browseKeyDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Open Key...', filetypes=((f'Key files', '*.key'), fileTypes[4]))
     if browseKeyDialog:
-        logger.info('User selected key')
+        logger.info(f'User selected key')
         keyEntry.delete(0,"end")
         keyEntry.insert(0, browseKeyDialog)
-    return
 
-def BrowseEncryptDialog(encrypt2Entry):
-    global textFiles
-    browseEncryptDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Encrypt...', filetypes=(('Text files', textFiles), ('Video files', videoFiles), ('Audio files', audioFiles),('Picture files', pictureFiles), ('Pdf files', '*.pdf'), ('All files', '*.*')))
+def BrowseEncryptDialog(encrypt2Entry: Entry):
+    browseEncryptDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Encrypt...', filetypes=(fileTypes[0], fileTypes[1], fileTypes[2], fileTypes[3], fileTypes[4]))
     if browseEncryptDialog:
         logger.info('User selected file to Encrypt')
         encrypt2Entry.delete(0,"end")
         encrypt2Entry.insert(0, browseEncryptDialog)
-    return
 
-def BrowseDecryptDialog(decrypt2Entry):
-    browseDecryptDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Decrypt...', filetypes=(('Encrypted Files', '*.Encrypted'), ('Text files', textFiles), ('All files', '*.*')))
+def BrowseDecryptDialog(decrypt2Entry: Entry):
+    browseDecryptDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Decrypt...', filetypes=(fileTypes[5], fileTypes[0]))
     if browseDecryptDialog:
         logger.info('User selected file to Decrypt')
         decrypt2Entry.delete(0,"end")
         decrypt2Entry.insert(0, browseDecryptDialog)
-    return 
 
-def GenerateKey(keyEntry):
-    keyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile='Key', title='Save new Key...', filetypes=(('Key files', '*.key'),('All files', '*.*')))
+def GenerateKey(keyEntry: Entry):
+    keyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile='Key', title='Save new Key...', filetypes=(fileTypes[6], fileTypes[4]))
     if keyPath:
         logger.info('User generated key')
         keyEntry.delete(0,"end")
@@ -67,160 +74,147 @@ def GenerateKey(keyEntry):
             f.write(Fernet.generate_key())
     return
 
-def Cryptography1(mode: str, entry, keyEntry, out):
+def Cryptography1(mode: str, entry: Entry, keyEntry: Entry):
     logger.info(f'Cryptography1 initiated in {mode} mode')
     keyPath = keyEntry.get()
-    if len(keyPath) != 0 and len(entry.get()) != 0:
-        try:
-            logger.info(f'imports key for Cryptography1 - {mode} mode')
-            with open(keyPath, 'rb') as f:
-                k = Fernet(f.read())  # Imports the key
-        except FileNotFoundError:
-            logger.info(f'shows KeyNotFound warning to user in Cryptography1 - {mode} mode')
-            messagebox.showwarning(title='Key not found', message=f'The {mode}ion Key you tried to use does not exist!\nPlease use an existing Key!')
-        except Exception:
-            logger.exception(f'Unknown error/uncaught exception in Cryptography1 - {mode} mode')
-            messagebox.showerror(title='Unknown error', message=f'An unknown error occurred while trying to {mode}!')
-        else:
+    try:
+        if keyPath and entry.get():
+            try:
+                with open(keyPath, 'rb') as f:
+                    k = Fernet(f.read())  # Imports the key
+                logger.info('Loaded Key')
+            except FileNotFoundError:
+                raise KeyNotFoundError
             
             encoded = entry.get().encode()  # Encodes the message
-            try:
-                if mode == 'Encrypt':
-                    logger.info(f'Encrypted a message')
-                    message = k.encrypt(encoded)  # Encrypts the message
-                elif mode == 'Decrypt':
-                    logger.info(f'Decrypted a message')
-                    message = k.decrypt(encoded) # Decrypts the message
-            except InvalidToken:
-                logger.info(f'shows InvalidToken warning to user in Cryptography1 - {mode} mode')
-                messagebox.showerror(title=f'Wrong {mode}ion Key entered!', message=f'This is the wrong Key to {mode} this message! Use the right Key to {mode}!')
-            except Exception:
-                logger.exception(f'Unknown error/uncaught exception in Cryptography1 - {mode} mode')
-                messagebox.showerror(title='Unknown error', message=f'An unknown error occurred while trying to {mode}!')
-            else:
-                # deletes entry and encoded Contents
-                encoded = None
-                entry.delete(0, 'end')
+            logger.info('Encoded Message')
 
-                # Writes the message
-                out.config(state='normal')
-                out.delete(0, 'end')
-                out.insert(0, message)
-                out.config(state='readonly')
-                logger.info('Finished Cryptography1 function')
-    elif len(keyPath) == 0:
-        logger.info(f'shows NoKeyEntered warning in Cryptograph1 {mode} mode')
-        messagebox.showwarning(title=f'No {mode}ion Key entered', message=f'Please insert or generate a {mode}ion Key to {mode} the message with!')
-    elif len(entry.get()) == 0:
-        logger.info(f'shows NoMessageEntered warning in Cryptography1 {mode} mode')
-        messagebox.showwarning(title=f'No message to {mode} entered', message=f'Please enter a message to {mode} before you try to {mode} it!')
-    return
+            if mode == 'Encrypt':
+                message = k.encrypt(encoded)  # Encrypts the message
+                logger.info(f'Encrypted a message')
+            elif mode == 'Decrypt':
+                message = k.decrypt(encoded) # Decrypts the message
+                logger.info(f'Decrypted a message')
+                
+            # deletes entry
+            entry.delete(0, 'end')
 
-def Cryptography2(mode: str, entry, keyEntry, out):
+            # Writes the message
+            out.config(state='normal')
+            out.delete(0, 'end')
+            out.insert(0, message)
+
+        elif entry.get() == '':
+            logger.info("Finished Cryptography1 because User didn't enter a message")
+            messagebox.showwarning(f'No Text to {mode} entered', f'You Need to Enter a Message Before You Try to {mode}')
+        elif keyEntry.get() == '':
+            logger.info("Finished Cryptography1 because User didn't enter a Key")
+            messagebox.showwarning(f'No text to {mode} entered', f'You Need to Insert a Key Before You Try to {mode}')
+    except KeyNotFoundError:
+        messagebox.showwarning(title=f'Key not found', message=f"The Key You tried to Use Does Not Exist!\nPlease use an Existing Key!")
+        logger.info(f"The Key the User tried to Use does Not Exist")
+    except MemoryError:
+        messagebox.showerror(title=f'{mode}ion failed', message=f"The message couldn't be {mode}ed because it was too big!")
+        logger.info(f'{mode}ion failed, file was too big')
+    except InvalidToken:
+        messagebox.showerror(title=f'Wrong Key entered!', message=f'This is the wrong Key to {mode} this message! Use the right Key!')
+        logger.exception(f'Decryption failed because of a Decryption Error in {mode} mode')
+    except Exception:
+        messagebox.showerror(title='Unknown Error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {os.getcwd()}/Cryptographer.log')
+        logger.exception(f'Unknown error/uncaught exception in Cryptography1 - {mode} mode')
+    finally:
+        out.config(state='readonly')
+        logger.info('Cryptography1 finished')
+
+def Cryptography2(mode: str, entry: Entry, keyEntry: Entry):
     logger.info(f'Cryptography2 initiated in {mode} mode')
-    # get variables
-    filePath = entry.get()
-
-    
-    keyPath = keyEntry.get()
-    if len(keyPath) != 0 and len(filePath) != 0:
-        try:
-            # Checks for user conformation if file is too big
-            if os.path.getsize(filePath) >= 1073741824:
-                logger.info(f'shows askYesNoPrompt1 in Cryptography2 {mode} mode')
-                userConfirm = messagebox.askyesno(title='file too big', message=f'File larger than 1 Gigabyte will take several minutes to {mode} or will fail,\nwould you still like to proceed?')
-            elif os.path.getsize(filePath) >= 100000000:
-                logger.info(f'shows askYesNoPrompt2 in Cryptography2 {mode} mode')
-                userConfirm = messagebox.askyesno(title='file too big', message=f'File larger than 100mb could take a long time to {mode},\nwould you still like to proceed?')
-            else:
-                userConfirm = True
-        except FileNotFoundError:
-            #shows error if file was not found
-            logger.info(f'shows FileNotFound warning in Cryptography2 {mode} mode')
-            messagebox.showwarning(title='File not found', message=f'The file you would like to {mode} was not found!\nPlease use an existing file!')
-        except Exception:
-            logger.exception(f'Unknown error/uncaught exception in Cryptography2 - {mode} mode')
-            messagebox.showerror(title='Unknown error', message=f'An unknown error occurred while trying to {mode}!')
-        else:
+    try:
+        keyPath = keyEntry.get()
+        filePath = entry.get()
+        if keyPath and filePath:
+            try:
+                # Checks for user conformation if file is too big
+                if os.path.getsize(filePath) >= 1073741824:
+                    logger.info(f'shows askYesNoPrompt1 in Cryptography2 {mode} mode')
+                    userConfirm = messagebox.askyesno(title='file too big', message=f'File larger than 1 Gigabyte will take several minutes to {mode} or will fail,\nwould you still like to proceed?')
+                elif os.path.getsize(filePath) >= 100000000:
+                    logger.info(f'shows askYesNoPrompt2 in Cryptography2 {mode} mode')
+                    userConfirm = messagebox.askyesno(title='file too big', message=f'File larger than 100mb could take a long time to {mode},\nwould you still like to proceed?')
+                else:
+                    userConfirm = True
+            except FileNotFoundError:
+                raise fileNotFoundError
             if userConfirm:
                 try:
-                    logger.info(f'imports key in Cryptography2 {mode} mode')
-                    # imports encryption Key
+                    # import Key
                     with open(keyPath, 'rb') as f:
                         k = Fernet(f.read())  # Imports the Key
-                    
-                    # CheckSeperator
-                    if filePath.find('/') != -1:
-                        seperator = '/'
-                    elif filePath.find(chr(92)) != -1:
-                        seperator = chr(92)
-
-                    # imports fileContents of file to encrypt
-                    logger.info(f'imports fileContents in Cryptography2 {mode} mode')
-                    with open(filePath, 'rb') as f:
-                        fileContents = f.read()
-
-                    # Encrypts or Decrypts the file, creates filePath2 + some other variables and deletes fileContents and filePath out of Memory
-                    if mode == 'Encrypt':
-                        fileContents = k.encrypt(fileContents)
-                        fileExtention = pathlib.Path(filePath).suffix
-                        pathLength2 = len(filePath.replace(fileExtention, ''))
-                        filePath2 = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind(seperator) + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind(seperator) + 1:pathLength2]}', title='Save Encrypted file...', filetypes=(('Encrypted file', '*.Encrypted'),('Text file', '*.txt'),('Any file', '*.*')))
-                        # writes encrypted Contents to file
-                        if filePath2:
-                            logger.info('Encrypts and saves file')
-                            with open(filePath2, 'wb') as f:
-                                f.write(fileExtention.encode()+ '$'.encode() +fileContents)
-                        else:
-                            logger.info('Finished Cryptography2 because User cancelled saving')
-                            return
-                    elif mode == 'Decrypt':
-                        fileContents = fileContents.decode().split('$', 1)
-                        extention = fileContents[0]
-                        fileContents = k.decrypt(fileContents[1].encode())
-                        pathLength2 = len(filePath.replace(pathlib.Path(filePath).suffix, ''))
-                        filePath2 = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind(seperator) + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind(seperator) + 1:pathLength2], title='Save Decrypted file...', filetypes=(('Decrypted file',f'*{extention}' ),('Any file', '*.*')))
-                        if filePath2:
-                            logger.info('Decrypts and saves file')
-                            with open(filePath2, 'wb') as f:
-                                f.write(fileContents)
-                        else:
-                            logger.info('Finished Cryptography2 because User cancelled saving')
-                            return
-
-                    
-                    # writes filePath2 to out
-                    out.config(state='normal')
-                    out.delete(0, 'end')
-                    out.insert(0, filePath2)
-                    out.config(state='readonly')
-                    logger.info(f'finished Cryptography2 in {mode} mode')
-                except ValueError:
-                    logger.info(f'shows ValueError error in Cryptography2 in {mode} mode')
-                    messagebox.showerror(title=f'{mode}ion failed', message=f"The file couldn't be {mode}ed because the file type is not supported!")
-                except InvalidToken:
-                    logger.info(f'shows InvalidToken warning in Cryptography2 in {mode} mode')
-                    messagebox.showerror(title=f'Wrong {mode}ion Key entered!', message=f'This is the wrong Key to {mode} this message! Use the right Key to {mode}!')
-                except MemoryError:
-                    logger.info(f'shows MemoryError error in Cryptography2 in {mode} mode')
-                    messagebox.showerror(title=f'{mode}ion failed', message=f"The file couldn't be {mode}ed because it was too big!")
+                    logger.info(f'Loaded Key')
                 except FileNotFoundError:
-                    logger.info(f'shows KeyNotFound warning in Cryptography2 {mode} mode')
-                    messagebox.showwarning(title=f'{mode}ion Key not found', message=f'The {mode}ion Key you tried to use does not exist!\nPlease use an existing Key!')
-                except Exception:
-                    logger.exception(f'Unknown error/uncaught exception in Cryptography2 - {mode} mode')
-                    messagebox.showerror(title='Unknown error', message=f'An unknown error occurred while trying to {mode}!')
-            else:
-                logger.info('Finished Cryptography2 because UserConfirm is False')    
-    elif len(keyPath) == 0:
-        logger.info(f'shows NoKeyEntered warning in Cryptography2 {mode} mode')
-        messagebox.showwarning(title=f'No {mode}ion Key entered', message=f'Please insert or generate a {mode}ion Key to {mode} the file with!')
-    elif len(filePath) == 0:
-        logger.info(f'shows NoMessageEntered warning in Cryptography2 {mode} mode')
-        messagebox.showwarning(title='No filepath entered', message=f'Please enter a filepath of the file to {mode}!')
-    return
+                    raise KeyNotFoundError
 
-def Copy(root: Tk, out: Entry):
+                # Load fileContents of file to encrypt
+                with open(filePath, 'rb') as f:
+                    contents = f.read()
+                logger.info(f'Loaded File Contents')
+
+                if mode == 'Encrypt':
+                    extention = pathlib.Path(filePath).suffix
+                    output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind("/") + 1:len(filePath.replace(extention, ""))]}', title='Save Encrypted file...', filetypes=(('Encrypted file', '*.Encrypted'),('Text file', '*.txt'),('Any file', '*.*')))
+                    logger.info('got new filePath')
+                    contents = base64.b64encode(extention.encode()) + b'$' + base64.b64encode(k.encrypt(contents)) # Format: extension$contents
+                    # writes encrypted Contents to file
+                    with open(output, 'wb') as f:
+                        f.write(contents)
+                    logger.info('Created contents and saved them to filePath')
+                else:
+                    contents = contents.split(b'$')
+                    logger.info('Splitted file into List')
+
+                    contents[1] = k.decrypt(contents[1]).decode()
+                    logger.info('Decrypted Contents')
+
+                    output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind("/") + 1:len(filePath.replace(pathlib.Path(filePath).suffix, ''))], title='Save Decrypted file...', filetypes=(('Decrypted file',f'*{base64.b64decode(contents[0]).decode()}' ),('Any file', '*.*')))
+                    logger.info('Got New filePath')
+                    with open(output, 'w') as f:
+                            f.write(contents[1])
+                    logger.info('Saved Contents to filePath')
+
+                # writes filePath2 to out
+                out.config(state='normal')
+                out.delete(0, 'end')
+                out.insert(0, output)
+                logger.info('Inserted output into out')
+        elif len(keyPath) == 0:
+            logger.info("Finished Cryptography2 because User didn't enter a Key")
+            messagebox.showwarning(f'No text to {mode} entered', f'You Need to Insert a Key Before You Try to {mode}')
+        elif len(filePath) == 0:
+            logger.info("Finished Cryptography2 because User didn't enter a filePath")
+            messagebox.showwarning(f'No File to {mode} entered', f'You Need to Enter a File Path Before You Try to {mode}')
+        return
+    except ValueError:
+        messagebox.showerror(title=f'{mode}ion failed', message=f"The file couldn't be {mode}ed because the file type is not supported!")
+        logger.exception(f"Showed ValueError")
+    except InvalidToken:
+        messagebox.showerror(title=f'Wrong Key entered!', message=f'This is the wrong Key to {mode} this message! Use the right Key!')
+        logger.exception(f'Decryption failed because of a Decryption Error in {mode} mode')
+    except MemoryError:
+        messagebox.showerror(title=f'{mode}ion failed', message=f"The message couldn't be {mode}ed because it was too big!")
+        logger.info(f'{mode}ion failed, file was too big')
+    except fileNotFoundError:
+        messagebox.showwarning(title='File not found', message=f'The File you would Like to {mode} was not Found!\nPlease Use an Existing File!')
+        logger.info(f"The File The User Tried To Use didn't Exist")
+    except KeyNotFoundError:
+        messagebox.showwarning(title=f'Key not found', message=f"The Key You tried to Use Does Not Exist!\nPlease use an Existing Key!")
+        logger.info(f"The Key the User tried to Use does Not Exist")
+    except Exception:
+        messagebox.showerror(title='Unknown Error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {os.getcwd()}/Cryptographer.log')
+        logger.exception(f'Unknown error/uncaught exception in Cryptography2 - {mode} mode')
+    finally:
+        out.config(state='readonly')
+        logger.info('Cryptography2 finished')
+
+def Copy(root: Tk):
     logger.info('Copy function initiated')
     try:
         root.clipboard_clear()
@@ -231,7 +225,7 @@ def Copy(root: Tk, out: Entry):
     finally:
         logger.info('Copy function finished')
 
-def Delete(out: Entry):
+def Delete():
     logger.info('Delete function initiated')
     try:
         out.config(state='normal')
@@ -244,6 +238,8 @@ def Delete(out: Entry):
         logger.info('Delete function finished')
 
 def main(root: Tk, version: str):
+    global out
+
     # GUI Configuration
     root.title(f'Symmetric Cryptographer ver. {version}')
     root.geometry('')
@@ -269,13 +265,13 @@ def main(root: Tk, version: str):
     Label(frame1, text='Encrypt a message:').grid(row=0, column=0) # Description Label
     encrypt1Entry = Entry(frame1, font=('Arial', 14), width=20) # Define Entry
     encrypt1Entry.grid(row=1, column=0) # Put Entry on screen
-    Button(frame1, text='Encrypt', command=lambda: Cryptography1('Encrypt', encrypt1Entry, KeyEntry, out)).grid(row=1, column=1) # Encrypt Btn
+    Button(frame1, text='Encrypt', command=lambda: Cryptography1('Encrypt', encrypt1Entry, KeyEntry)).grid(row=1, column=1) # Encrypt Btn
 
     # Encrypt option 2
     Label(frame1, text='\n\nEncrypt a file:').grid(row=2, column=0) # Description Label
     encrypt2Entry = Entry(frame1, font=('Arial', 14), width=20) # Define Entry
     encrypt2Entry.grid(row=3, column=0) # Put Entry on screen
-    Button(frame1, text='Encrypt', command=lambda: Cryptography2('Encrypt', encrypt2Entry, KeyEntry, out)).grid(row=3,column=1) # Encrypt Btn
+    Button(frame1, text='Encrypt', command=lambda: Cryptography2('Encrypt', encrypt2Entry, KeyEntry)).grid(row=3,column=1) # Encrypt Btn
     Button(frame1, text='Browse', command=lambda: BrowseEncryptDialog(encrypt2Entry)).grid(row=3, column=2) # BrowseCryptographyDialog
     logger.info('loaded encrypt options')
 
@@ -287,13 +283,13 @@ def main(root: Tk, version: str):
     Label(frame2, text='Decrypt a message:').grid(row=0, column=0) # Description Label
     decrypt1Entry = Entry(frame2, font=('Arial', 14), width=20) # Define Entry
     decrypt1Entry.grid(row=1, column=0) # Put Entry on screen
-    Button(frame2, text='Decrypt', command=lambda: Cryptography1('Decrypt', decrypt1Entry, KeyEntry, out)).grid(row=1, column=1) # Decrypt Btn
+    Button(frame2, text='Decrypt', command=lambda: Cryptography1('Decrypt', decrypt1Entry, KeyEntry)).grid(row=1, column=1) # Decrypt Btn
 
     # Decrypt option 2
     Label(frame2, text='\n\nDecrypt a file:').grid(row=2, column=0) # Description Label
     decrypt2Entry = Entry(frame2, font=('Arial', 14), width=20) # Define Entry
     decrypt2Entry.grid(row=3, column=0) # Put Entry on screen
-    Button(frame2, text='Decrypt', command=lambda: Cryptography2('Decrypt', decrypt2Entry, KeyEntry, out)).grid(row=3,column=1) # Decrypt Btn
+    Button(frame2, text='Decrypt', command=lambda: Cryptography2('Decrypt', decrypt2Entry, KeyEntry)).grid(row=3,column=1) # Decrypt Btn
     Button(frame2, text='Browse', command=lambda: BrowseDecryptDialog(decrypt2Entry)).grid(row=3, column=2) # BrowseDecryptDialog
     logger.info('loaded decrypt options')
 
@@ -301,10 +297,10 @@ def main(root: Tk, version: str):
     frame3 = LabelFrame(root, text='Output:', font=('Arial', 12, UNDERLINE), padx=10, pady=12, borderwidth=0)
     frame3.grid(row=3, column=0, padx=10, columnspan=2)
 
-    Button(frame3, text='Delete', command= lambda: Delete(out)).grid(row=0, column=0)
+    Button(frame3, text='Delete', command=Delete).grid(row=0, column=0)
     out = Entry(frame3, font=('Arial', 14), width=27, state='readonly')
     out.grid(row=0, column=1)
-    Button(frame3, text='Copy', command=lambda: Copy(root, out)).grid(row=0, column=2)
+    Button(frame3, text='Copy', command=lambda: Copy(root)).grid(row=0, column=2)
 
 
     return frame0, frame1, frame2, frame3, TitleLabel

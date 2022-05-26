@@ -79,10 +79,10 @@ def GenerateKeyPair(keyEntry: Entry):
             Keys += (Fernet.generate_key(), )
             with open(publickeyPath, 'wb') as f:
                 f.write(Keys[0].save_pkcs1('PEM'))
-            logger.info('User generated Public ')
+            logger.info('User generated Public key')
             with open(privateKeyPath, 'wb') as f:
                 f.write(Keys[2] + b'$' + Keys[1].save_pkcs1("PEM")) # Format: symKey$privateKey
-            logger.info('User generated Private ')
+            logger.info('User generated Private key')
             keyEntry.delete(0,'end')
             keyEntry.insert(0, privateKeyPath)
             logger.info('finished GenerateKeyPair')
@@ -93,11 +93,10 @@ def GenerateKeyPair(keyEntry: Entry):
         logger.info('Exited GenerateKeyPair because User generated no Keys')
 
 
-def Cryptography1(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntry: Entry, out: Entry):
+def Cryptography1(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntry: Entry):
     logger.info(f'Cryptography1 initiated in {mode} mode')
     try:
         if PublicKeyEntry.get() and PrivateKeyEntry.get() and entry.get():
-            
             try:
                 with open(PrivateKeyEntry.get(), 'rb') as f:
                     content = f.read().split(b'$', 1)
@@ -147,7 +146,7 @@ def Cryptography1(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
         logger.exception(f'Decryption failed because of a Decryption Error in {mode} mode')
     except MemoryError:
         messagebox.showerror(title=f'{mode}ion failed', message=f"The message couldn't be {mode}ed because it was too big!")
-        logger.info(f'The Memory size was too small')
+        logger.info(f'{mode}ion failed, file was too big')
     except PubKeyNotFoundError:
         messagebox.showwarning(title=f'Key not found', message=f"The Public Key You tried to Use Does Not Exist!\nPlease use an Existing Key!")
         logger.info(f"The Public Key the User tried to Use does Not Exist")
@@ -162,7 +161,7 @@ def Cryptography1(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
         logger.info('Cryptography1 finished')
 
         
-def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntry: Entry, out: Entry):
+def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntry: Entry):
     logger.info(f'Cryptography2 initiated in {mode} mode')
     try:
         if entry.get() and PublicKeyEntry.get() and PrivateKeyEntry.get():
@@ -245,7 +244,7 @@ def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
         logger.exception(f'Decryption failed because of a Decryption Error in {mode} mode')
     except MemoryError:
         messagebox.showerror(title=f'{mode}ion failed', message=f"The message couldn't be {mode}ed because it was too big!")
-        logger.info(f'The Memory size was too small')
+        logger.info(f'{mode}ion failed, file was too big')
     except fileNotFoundError:
         messagebox.showwarning(title='File not found', message=f'The File you would Like to {mode} was not Found!\nPlease Use an Existing File!')
         logger.info(f"The File The User Tried To Use didn't Exist")
@@ -262,7 +261,7 @@ def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
         out.config(state='readonly')
         logger.info('Cryptography2 finished')
     
-def Copy(root: Tk, out: Entry):
+def Copy(root: Tk):
     logger.info('Copy function initiated')
     try:
         root.clipboard_clear()
@@ -273,7 +272,7 @@ def Copy(root: Tk, out: Entry):
     finally:
         logger.info('Copy function finished')
 
-def Delete(out: Entry):
+def Delete():
     logger.info('Delete function initiated')
     try:
         out.config(state='normal')
@@ -286,6 +285,8 @@ def Delete(out: Entry):
         logger.info('Delete function finished')
 
 def main(root: Tk, version: str):
+    global out
+
     # GUI Configuration
     root.title(f'Asymmetric Cryptographer ver. {version}')
     root.geometry('')
@@ -322,13 +323,13 @@ def main(root: Tk, version: str):
     Label(frame1, text='Encrypt a message:').grid(row=0, column=0)
     Encrypt1Entry = Entry(frame1, font=('Arial', 14), width=20)
     Encrypt1Entry.grid(row=1, column=0)
-    Button(frame1, text='Encrypt', command=lambda: Cryptography1('Encrypt', Encrypt1Entry, publicKeyEntry, PrivateKeyEntry, out)).grid(row=1, column=1)
+    Button(frame1, text='Encrypt', command=lambda: Cryptography1('Encrypt', Encrypt1Entry, publicKeyEntry, PrivateKeyEntry)).grid(row=1, column=1)
 
     # Encrypt option 2
     Label(frame1, text='\nEncrypt a file:').grid(row=2, column=0)
     Encrypt2Entry = Entry(frame1, font=('Arial', 14), width=20)
     Encrypt2Entry.grid(row=3, column=0)
-    Button(frame1, text='Encrypt', command=lambda: Cryptography2('Encrypt', Encrypt2Entry, publicKeyEntry, PrivateKeyEntry, out)).grid(row=3,column=1)
+    Button(frame1, text='Encrypt', command=lambda: Cryptography2('Encrypt', Encrypt2Entry, publicKeyEntry, PrivateKeyEntry)).grid(row=3,column=1)
     Button(frame1, text='Browse', command=lambda: BrowseEncryptDialog(Encrypt2Entry)).grid(row=3, column=2) 
     logger.info('loaded encrypt options') # Section Loaded
 
@@ -341,13 +342,13 @@ def main(root: Tk, version: str):
     Label(frame2, text='Decrypt a message:').grid(row=0, column=0)
     Decrypt1Entry = Entry(frame2, font=('Arial', 14), width=20)
     Decrypt1Entry.grid(row=1, column=0)
-    Button(frame2, text='Decrypt', command=lambda: Cryptography1('Decrypt', Decrypt1Entry, publicKeyEntry, PrivateKeyEntry, out)).grid(row=1, column=1)
+    Button(frame2, text='Decrypt', command=lambda: Cryptography1('Decrypt', Decrypt1Entry, publicKeyEntry, PrivateKeyEntry)).grid(row=1, column=1)
 
     # Decrypt option 2
     Label(frame2, text='\nDecrypt a file:').grid(row=2, column=0)
     Decrypt2Entry = Entry(frame2, font=('Arial', 14), width=20)
     Decrypt2Entry.grid(row=3, column=0)
-    Button(frame2, text='Decrypt', command=lambda: Cryptography2('Decrypt', Decrypt2Entry, publicKeyEntry, PrivateKeyEntry, out)).grid(row=3,column=1)
+    Button(frame2, text='Decrypt', command=lambda: Cryptography2('Decrypt', Decrypt2Entry, publicKeyEntry, PrivateKeyEntry)).grid(row=3,column=1)
     Button(frame2, text='Browse', command=lambda: BrowseDecryptDialog(Decrypt2Entry)).grid(row=3, column=2)
     logger.info('loaded decrypt options') # Section Loaded
 
@@ -355,10 +356,10 @@ def main(root: Tk, version: str):
     frame3 = LabelFrame(root, text='Output:', font=('Arial', 12, UNDERLINE), padx=10, pady=12, borderwidth=0)
     frame3.grid(row=3, column=0, padx=10, columnspan=2)
 
-    Button(frame3, text='Delete', command= lambda: Delete(out)).grid(row=0, column=0)
+    Button(frame3, text='Delete', command=Delete).grid(row=0, column=0)
     out = Entry(frame3, font=('Arial', 14), width=27, state='readonly')
     out.grid(row=0, column=1)
-    Button(frame3, text='Copy', command=lambda: Copy(root, out)).grid(row=0, column=2)
+    Button(frame3, text='Copy', command=lambda: Copy(root)).grid(row=0, column=2)
 
     return frame0, frame1, frame2, frame3, TitleLabel
 
