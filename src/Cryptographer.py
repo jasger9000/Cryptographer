@@ -1,7 +1,7 @@
 import importlib
 import Asym_Cryptographer
 import Sym_Cryptographer
-from tkinter import Button, Checkbutton, IntVar, Label, StringVar, Toplevel, messagebox, Tk, Menu, TclError, ttk
+from tkinter import HORIZONTAL, Button, Checkbutton, IntVar, Label, Toplevel, messagebox, Tk, Menu, TclError, ttk
 import logging
 import requests
 from packaging.version import parse
@@ -199,7 +199,7 @@ def main():
 
     root.config(menu=menubar)
     
-    if config['Settings']['CFUatStartup'] == 1:
+    if config['Settings']['CFUatStartup'] == '1':
         threading.Thread(target=lambda: CheckForUpdates('automatic')).start()
 
     loaded = True
