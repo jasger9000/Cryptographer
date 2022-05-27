@@ -12,7 +12,9 @@ import zipfile
 import subprocess
 from configparser import ConfigParser
 import threading
+import sys
 
+sys.path.insert(0, 'Languages')
 
 # logger config
 logger = logging.getLogger(__name__)
@@ -129,6 +131,9 @@ def CheckForUpdates(mode: str):
         messagebox.showinfo(lang.NewUpdateFalse['Title2'], lang.NewUpdateFalse['Message2'])
 
 def InstallNewUpdate(latest: str):
+    InstallWindow = Toplevel()
+    InstallBar = ttk.Progressbar(InstallWindow, orient=HORIZONTAL, length=100, mode='determinate')
+    InstallBar.grid(row=0, column=0, pady=20)
     logger.info('Downloading Update')
     file = f'{os.getcwd()}/Cryptographer.zip'
     url = f'https://github.com/jasger9000/Cryptographer/releases/download/{latest}/Cryptographer.zip'
@@ -142,13 +147,16 @@ def InstallNewUpdate(latest: str):
     if os.path.exists(file):
         os.remove(file)
     logger.info('Finished installing, restarting now')
-    subprocess.Popen(f'"{os.getcwd()}/Cryptographer.exe"')
+    subprocess.Popen(f'"{os.getcwd()}/Cryptographer {latest}.exe"')
     root.destroy()
 
 
 def main():
     global root, loaded
     loaded = False
+
+    if os.path.basename(os.getcwd()) == f'Cryptographer {version}':
+        os.rename(os.path.basename(os.getcwd()), 'Cryptographer.py')
 
     # Tk Config
     root = Tk()
@@ -210,13 +218,14 @@ def LoadLang(l: str):
     if type(l) is not str:
         l = langBox.get()
     try:
-        lang = importlib.import_module(f'Languages.{l}')
+        lang = importlib.import_module(l)
         UpdateConfig('Settings', 'Language', l)
     except ModuleNotFoundError:
         logger.error('Language Module not found, continuing with English')
         messagebox.showerror("Language not found", "Couldn't find the Language you are trying to use, please reinstall the Language pack")
         UpdateConfig('Settings', 'Language', 'English')
-        lang = importlib.import_module(f'Languages.English')
+        lang = importlib.import_module('English')
+        logger.exception('Language Module not found, continuing with English')
     except NameError: # Triggers when config is not defined e.g. when lang is imported in sym or Asym
         pass
     return lang
