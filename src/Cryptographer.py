@@ -14,8 +14,6 @@ from configparser import ConfigParser
 import threading
 
 
-
-
 # logger config
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -61,14 +59,14 @@ def OpenSettings():
     # Save key?
     Label(Settings, text=lang.SettingsLabels['RememberKeyLabel'], background='#202124', foreground='#e8eaed').grid(row=1, column=0)
     saveKey = IntVar()
-    saveKey.set(config['Settings']['Save Last Key'])
-    Checkbutton(Settings, variable=saveKey, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'Save Last Key', str(saveKey.get())), background='#202124').grid(row=1, column=1) # Also need to save State
+    saveKey.set(config['Settings']['SaveLastKey'])
+    Checkbutton(Settings, variable=saveKey, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'SaveLastKey', str(saveKey.get())), background='#202124').grid(row=1, column=1) # Also need to save State
 
     # Automatic CFU?
     Label(Settings, text=lang.SettingsLabels['AutoCFULabel'], background='#202124', foreground='#e8eaed').grid(row=2, column=0)
     autoCFU = IntVar()
-    autoCFU.set(config['Settings']['CFU at startup'])
-    Checkbutton(Settings, variable=autoCFU, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'CFU at startup', str(autoCFU.get())), background='#202124').grid(row=2, column=1)
+    autoCFU.set(config['Settings']['CFUatStartup'])
+    Checkbutton(Settings, variable=autoCFU, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'CFUatStartup', str(autoCFU.get())), background='#202124').grid(row=2, column=1)
 
     Button(Settings, text=lang.SettingsLabels['ApplyBtn'], command=lambda: [root.destroy(), main()]).grid(row=15, column=1)
     root.wait_window()
@@ -88,7 +86,7 @@ def switchSymmetric():
 
     if loaded is False or config['State']['Mode'] != 'Symmetric':      
         logger.info('Loading Symmetric Cryptographer')
-        frameA0, frameA1, frameA2, frameA3, TitleLabelA = Sym_Cryptographer.main(root, version)
+        frameA0, frameA1, frameA2, frameA3, TitleLabelA = Sym_Cryptographer.main(root, version, lang.Language)
         UpdateConfig('State', 'Mode', 'Symmetric')
         logger.info('Loading complete')
 
@@ -100,7 +98,7 @@ def switchAsymmetric():
 
     if loaded is False or config['State']['Mode'] != 'Asymmetric':   
         logger.info('Loading Asymmetric Cryptographer')
-        frameB0, frameB1, frameB2, frameB3, TitleLabelB = Asym_Cryptographer.main(root ,version)
+        frameB0, frameB1, frameB2, frameB3, TitleLabelB = Asym_Cryptographer.main(root ,version, lang.Language)
         UpdateConfig('State', 'Mode', 'Asymmetric')
         logger.info('Loading complete')
 
@@ -171,6 +169,10 @@ def main():
             InstallNewUpdate(requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
         else:
             root.destroy()
+    if config['State']['Mode'] == 'Symmetric':
+        switchSymmetric()
+    elif config['State']['Mode'] == 'Asymmetric':
+        switchAsymmetric()
 
     menubar = Menu(root)
     ModeMenu = Menu(menubar, tearoff=0)
@@ -197,7 +199,7 @@ def main():
 
     root.config(menu=menubar)
     
-    if config['Settings']['CFU at startup'] == 1:
+    if config['Settings']['CFUatStartup'] == 1:
         threading.Thread(target=lambda: CheckForUpdates('automatic')).start()
 
     loaded = True
@@ -205,8 +207,6 @@ def main():
 
 
 def LoadLang(l: str):
-    global lang
-    
     if type(l) is not str:
         l = langBox.get()
     try:
@@ -217,12 +217,13 @@ def LoadLang(l: str):
         messagebox.showerror("Language not found", "Couldn't find the Language you are trying to use, please reinstall the Language pack")
         UpdateConfig('Settings', 'Language', 'English')
         lang = importlib.import_module(f'Languages.English')
-    except NameError:
+    except NameError: # Triggers when config is not defined e.g. when lang is imported in sym or Asym
         pass
+    return lang
 
 
 def LoadConfig():
-    global config
+    global config, lang
     config = ConfigParser()
 
     logger.info('Searching for config')
@@ -230,34 +231,43 @@ def LoadConfig():
         logger.info('Config found, loading...')
         config.read('config.ini')
 
-        LoadLang(config['Settings']['Language'])
-        if config['State']['Mode'] == 'Symmetric':
-            switchSymmetric()
-        elif config['State']['Mode'] == 'Asymmetric':
-            switchAsymmetric()
+        lang = LoadLang(config['Settings']['Language'])
         logger.info('Config loaded')
     else:
         logger.warning('Config not found, generating new')
         config.add_section('Settings')
         config.set('Settings', 'Language', 'English')
-        config.set('Settings', 'Save Last Key', '0')
+        config.set('Settings', 'SaveLastKey', '0')
         config.set('Settings', 'Password', 'False')
-        config.set('Settings', 'CFU at startup', '1')
+        config.set('Settings', 'CFUatStartup', '1')
         config.set('Settings', 'Mode', 'Light')
-        config.set('Settings', 'Default Path', os.path.expandvars(R'C:\Users\$USERNAME\Documents'))
+        config.set('Settings', 'DefaultPath', os.path.expandvars(R'C:\Users\$USERNAME\Documents'))
         
         config.add_section('State')
         config.set('State', 'Mode', 'None')
         config.set('State', 'Keyfile', 'None')
-        config.set('State', 'Public Keyfile', 'None')
-        config.set('State', 'Private Keyfile', 'None')
+        config.set('State', 'PublicKeyfile', 'None')
+        config.set('State', 'PrivateKeyfile', 'None')
         config.set('State', 'locked', 'False')
         config.set('State', 'Password', 'None')
         with open('config.ini', 'w') as f:
             config.write(f)
-        LoadLang('English')
+        lang = LoadLang('English')
         logger.info('New Config generated')
     return config
+
+def LoadFilesTypes(lang):
+    return (
+        (lang.fileTypes['Text'], ('*.txt', '*.doc', '*.docx', '*.log', '*.msg', '*.odt', '*.pages', '*.rtf', '*.tex', '*.wpd', '*.wps')),                   # 0
+        (lang.fileTypes['Video'], ('*.mp4', '*.mov', '*.avi', '*.flv', '*.mkv', '*.wmv', '*.avchd', '*.webm', '*MPEG-4', '*.H.264')),                       # 1
+        (lang.fileTypes['Audio'], ('*.aif', '*.aiff', '*.iff', '*.m3u', '*.m4a', '*.mp3', '*.mpa', '*.wav', '*.wma', '*.aup3', '*.aup', '*.ogg', '*.mp2')), # 2
+        (lang.fileTypes['Picture'], ('*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp', '*.raw', '*.tiff', '*.psd', '*.cr2')),                                   # 3
+        (lang.fileTypes['All'], '*.*'),                                                                                                                     # 4
+        (lang.fileTypes['Encrypted'], '*.Encrypted'),                                                                                                       # 5
+        (lang.fileTypes['Key'], '*.key'),                                                                                                                   # 6
+        (lang.fileTypes['PrivateKey'], '*.priv_key'),                                                                                                       # 7
+        (lang.fileTypes['PublicKey'], '*.pub_key'),                                                                                                         # 8
+        )
 
 
 def UpdateConfig(Section: str, Option: str, Value: str):
@@ -267,14 +277,15 @@ def UpdateConfig(Section: str, Option: str, Value: str):
 
 
 if __name__ == '__main__':
+    # TODO Make apply Btn only appear after changes
     # TODO Keyfile
-    # TODO Public Keyfile
-    # TODO Private Keyfile
+    # TODO PublicKeyfile
+    # TODO PrivateKeyfile
     # TODO locked
     # TODO Password
     # TODO Make VersionNotFound Window always focused
     # TODO Make installation Progress Bar
     # TODO History
     # TODO Light/dark mode
-    # TODO Default Path
+    # TODO DefaultPath
     main()
