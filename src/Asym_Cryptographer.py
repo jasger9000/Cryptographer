@@ -5,6 +5,7 @@ import base64
 import logging
 import pathlib
 import os
+
 # logger config
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -25,18 +26,6 @@ streamHandler.setLevel(logging.DEBUG)
 logger.addHandler(streamHandler)
 
 
-fileTypes = (
-    ('Text Files', ('*.txt', '*.doc', '*.docx', '*.log', '*.msg', '*.odt', '*.pages', '*.rtf', '*.tex', '*.wpd', '*.wps')),
-    ('Video Files', ('*.mp4', '*.mov', '*.avi', '*.flv', '*.mkv', '*.wmv', '*.avchd', '*.webm', '*MPEG-4', '*.H.264')),
-    ('Audio Files', ('*.aif', '*.aiff', '*.iff', '*.m3u', '*.m4a', '*.mp3', '*.mpa', '*.wav', '*.wma', '*.aup3', '*.aup', '*.ogg', '*.mp2')),
-    ('Picture Files', ('*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp', '*.raw', '*.tiff', '*.psd', '*.cr2')),
-    ('All Files', '*.*'),
-    ('Encrypted Files', '*.Encrypted'),
-    ('Private Key files', '*.priv_key'),
-    ('Public Key files', '*.pub_key'),
-)
-
-
 class fileNotFoundError(FileNotFoundError):
     pass
 class PrivKeyNotFoundError(FileNotFoundError):
@@ -46,34 +35,34 @@ class PubKeyNotFoundError(FileNotFoundError):
 
 def BrowseKeyDialog(keyEntry: Entry, mode: str):
     if mode == 'Private':
-        type = 'priv_key'
+        type = 7
     else:
-        type = 'pub_key'
-    browseKeyDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Open {mode} Key...', filetypes=((f'{mode} Key files', f'*.{type}'), fileTypes[4]))
+        type = 8
+    browseKeyDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=lang.Dialog['Open'] + lang.Dialog[mode], filetypes=(fileTypes[type], fileTypes[4]))
     if browseKeyDialog:
         logger.info(f'User selected {mode} ')
         keyEntry.delete(0,"end")
         keyEntry.insert(0, browseKeyDialog)
 
 def BrowseEncryptDialog(encrypt2Entry: Entry):
-    browseEncryptDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Encrypt...', filetypes=(fileTypes[0], fileTypes[1], fileTypes[2], fileTypes[3], fileTypes[4]))
+    browseEncryptDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=lang.Dialog['Open'] + lang.Dialog['file'] + lang.Dialog['to'] + lang.Dialog['Encrypt'], filetypes=(fileTypes[0], fileTypes[1], fileTypes[2], fileTypes[3], fileTypes[4]))
     if browseEncryptDialog:
         logger.info('User selected file to Encrypt')
         encrypt2Entry.delete(0,"end")
         encrypt2Entry.insert(0, browseEncryptDialog)
 
 def BrowseDecryptDialog(decrypt2Entry: Entry):
-    browseDecryptDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=f'Select file to Decrypt...', filetypes=(fileTypes[5], fileTypes[0]))
+    browseDecryptDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=lang.Dialog['Open'] + lang.Dialog['file'] + lang.Dialog['to'] + lang.Dialog['Decrypt'], filetypes=(fileTypes[5], fileTypes[0]))
     if browseDecryptDialog:
         logger.info('User selected file to Decrypt')
         decrypt2Entry.delete(0,"end")
         decrypt2Entry.insert(0, browseDecryptDialog) 
 
-def GenerateKeyPair(keyEntry: Entry):
+def GenerateKeyPair(PublickeyEntry: Entry, PrivateKeyEntry: Entry):
     logger.info('Initiated GenerateKeyPair')
-    publickeyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=os.path.expandvars("$USERNAME's Public Key"), title='Save new Key...', filetypes=(fileTypes[7], fileTypes[4]))
+    publickeyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=os.path.expandvars("$USERNAME's " + lang.Dialog['Public']), title=lang.Dialog['Save'] + lang.Dialog['Public'], filetypes=(fileTypes[8], fileTypes[4]))
     if publickeyPath:
-        privateKeyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile="Private Key", title='Save new Key...', filetypes=(fileTypes[6], fileTypes[4]))
+        privateKeyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=lang.Dialog['Private'], title=lang.Dialog['Save'] + lang.Dialog['Private'], filetypes=(fileTypes[7], fileTypes[4]))
         if privateKeyPath:
             Keys = rsa.newkeys(2048)
             Keys += (Fernet.generate_key(), )
@@ -83,11 +72,14 @@ def GenerateKeyPair(keyEntry: Entry):
             with open(privateKeyPath, 'wb') as f:
                 f.write(Keys[2] + b'$' + Keys[1].save_pkcs1("PEM")) # Format: symKey$privateKey
             logger.info('User generated Private key')
-            keyEntry.delete(0,'end')
-            keyEntry.insert(0, privateKeyPath)
+            PublickeyEntry.delete(0,'end')
+            PrivateKeyEntry.delete(0, 'end')
+
+            PublickeyEntry.insert(0, privateKeyPath)
+            PrivateKeyEntry.insert(0, publickeyPath)
             logger.info('finished GenerateKeyPair')
         else:
-            messagebox.showwarning(title='Aborted Key Generation', message=f'Key Generation aborted because you only tried to Generate One Key, but You need Both!')
+            messagebox.showwarning(title=lang.Messages['AbortedKeyTitle'], message=lang.Messages['AbortedKeyMessage'])
             logger.info('Exited GenerateKeyPair because User only generated one Key')
     else:
         logger.info('Exited GenerateKeyPair because User generated no Keys')
