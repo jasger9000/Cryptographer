@@ -48,51 +48,186 @@ def LoadFileTypes(lang):
     (lang.fileTypes['PublicKey'], '*.pub_key'),                                                                                                         # 8
     )
 
+def LoadLang(l: str):
+    if type(l) is not str:
+        l = langBox.get()
+    try:
+        lang = importlib.import_module(l)
+        UpdateConfig('Settings', 'Language', l)
+    except ModuleNotFoundError:
+        logger.error('Language Module not found, continuing with English')
+        messagebox.showerror("Language not found", "Couldn't find the Language you are trying to use, please reinstall the Language pack")
+        UpdateConfig('Settings', 'Language', 'English')
+        lang = importlib.import_module('English')
+        logger.exception('Language Module not found, continuing with English')
+    except NameError: # Triggers when config is not defined e.g. when lang is imported in sym or Asym
+        pass
+    return lang
+
+
+def LoadConfig(Force: str):
+    global config, lang
+    config = ConfigParser()
+
+    logger.info('Searching for config')
+    if os.path.exists('config.ini') is False or Force is True:
+        logger.warning('Config not found, generating new')
+        config.add_section('Settings')
+        config.set('Settings', 'Language', 'English')
+        config.set('Settings', 'SaveLastKey', '3')
+        config.set('Settings', 'Password', 'False')
+        config.set('Settings', 'CFUatStartup', '1')
+        config.set('Settings', 'Theme', '1')
+        config.set('Settings', 'DefaultPath', os.path.expandvars(R'C:\Users\$USERNAME\Documents'))
+        
+        config.add_section('State')
+        config.set('State', 'Mode', 'Symmetric')
+        config.set('State', 'Keyfile', 'None')
+        config.set('State', 'PublicKeyfile', 'None')
+        config.set('State', 'PrivateKeyfile', 'None')
+        config.set('State', 'locked', 'False')
+        config.set('State', 'Password', 'None')
+        with open('config.ini', 'w') as f:
+            config.write(f)
+        lang = LoadLang('English')
+        logger.info('New Config generated')
+    else:
+        logger.info('Config found, loading...')
+        config.read('config.ini')
+
+        lang = LoadLang(config['Settings']['Language'])
+        if config['Settings']['theme'] == '1':
+            ttkbootstrap.Style('litera')
+        else:
+            ttkbootstrap.Style('darkly')
+        logger.info('Config loaded')
+    return config
+
+def UpdateConfig(Section: str, Option: str, Value: str):
+    if ApplyBtn:
+        ApplyBtn['state'] = 'normal'
+    config.set(Section, Option, Value)
+    with open('config.ini', 'w') as f:
+            config.write(f)
+
 def OpenSettings():
-    global langBox
+    global langBox, ApplyBtn, Settings, langList
+    logger.info('Opening Settings')
 
     # Window Config
-    Settings = Toplevel(root, bg='#202124')
+    Settings = Toplevel(root)
     Settings.title(lang.CryptMain['HelpSettingsLabel'])
     Settings.resizable(0,0)
     Settings.focus()
     Settings.transient(root)
     Settings.grab_set()
-    Settings.geometry('800x800')
+    logger.info('Loaded Window config')
+
+    
+    Label(Settings, text=lang.CryptMain['HelpSettingsLabel'] , font=('Helvetica', 14, font.BOLD, UNDERLINE)).grid(row=0, column=0, columnspan=2, pady=12)
+    column1 = Frame(Settings)
+    column1.grid(row=1, column=0, padx=10)
+
+    column2 = Frame(Settings)
+    column2.grid(row=1, column=1, padx=10)
+
+    column3 = Frame(Settings)
+    column3.grid(row=2, column=1, pady=20)
+
 
     # Language Setting
-    Label(Settings, text=lang.SettingsLabels['LangLabel'], fg="#e8eaed", bg='#202124').grid(row=0, column=0, padx=10, pady=12)
-    langList = ['Deutsch', 'English', 'Français'] # PLACEHOLDER
-    langBox = ttk.Combobox(Settings, values=langList, state='readonly')
+    Label(column1, text=lang.SettingsLabels['LangLabel']).grid(row=0, pady=5)
+    langList = []
+    for entry in os.scandir(f'{os.getcwd()}/Languages'):
+        if entry.is_file() and entry.name.rsplit('.')[1] == 'py':
+            langList.append(entry.name.rsplit('.')[0])
+    langBox = Combobox(column2, values=langList, state='readonly')
     langBox.set(lang.Language)
     langBox.bind('<<ComboboxSelected>>', LoadLang)
-    langBox.grid(row=0, column=1)
-    Button(Settings, text=lang.SettingsLabels['AddLangBtn'], command=InstallNewLanguage)
+    langBox.grid(row=0, pady=5)
+    Button(column2, text=lang.SettingsLabels['AddLangBtn'], command=InstallNewLanguage).grid(row=0, column=1, pady=5)
 
     # Save key?
-    Label(Settings, text=lang.SettingsLabels['RememberKeyLabel'], background='#202124', foreground='#e8eaed').grid(row=1, column=0)
+    Label(column1, text=lang.SettingsLabels['RememberKeyLabel']).grid(row=1, pady=5)
     saveKey = IntVar()
     saveKey.set(config['Settings']['SaveLastKey'])
-    Checkbutton(Settings, variable=saveKey, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'SaveLastKey', str(saveKey.get())), background='#202124').grid(row=1, column=1) # Also need to save State
+    Checkbutton(column2, variable=saveKey, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'SaveLastKey', str(saveKey.get()))).grid(row=1, pady=5)
 
     # Automatic CFU?
-    Label(Settings, text=lang.SettingsLabels['AutoCFULabel'], background='#202124', foreground='#e8eaed').grid(row=2, column=0)
+    Label(column1, text=lang.SettingsLabels['AutoCFULabel']).grid(row=2, pady=5)
     autoCFU = IntVar()
     autoCFU.set(config['Settings']['CFUatStartup'])
-    Checkbutton(Settings, variable=autoCFU, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'CFUatStartup', str(autoCFU.get())), background='#202124').grid(row=2, column=1)
+    Checkbutton(column2, variable=autoCFU, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'CFUatStartup', str(autoCFU.get()))).grid(row=2, pady=5)
 
-    Button(Settings, text=lang.SettingsLabels['ApplyBtn'], command=lambda: [root.destroy(), main()]).grid(row=15, column=1)
+    # Light/Dark/Windows mode
+    theme = IntVar()
+    theme.set(config['Settings']['theme'])
+    Label(column1, text=lang.SettingsLabels['LightTheme']).grid(row=3, pady=(20, 5))
+    Radiobutton(column2, variable=theme, value=1, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=3, pady=(20, 8))
+
+    Label(column1, text=lang.SettingsLabels['DarkTheme']).grid(row=4, pady=5)
+    Radiobutton(column2, variable=theme, value=2, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=4, pady=8)
+
+    # Label(column1, text='Sync theme').grid(row=5, pady=5) # ! NEEDS TO CHANGE WITH LANG
+    # Radiobutton(column2, variable=theme, value=3, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=5, pady=8)
+
+    
+    # Default and Apply Button
+    DefaultBtn = Button(column3, text=lang.SettingsLabels['DefaultBtn'], command=lambda: [LoadConfig(True), root.destroy(), os.startfile(__file__)])
+    DefaultBtn.grid(row=0, pady=5)
+    ApplyBtn = Button(column3, state='disabled',text=lang.SettingsLabels['ApplyBtn'], command=lambda: [root.destroy(), os.startfile(__file__)])
+    ApplyBtn.grid(row=0, column=1, pady=5)
+    
     root.wait_window()
+    logger.info('Finished loading')
 
 
 def InstallNewLanguage():
-    requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name']    
+    global langUrl
 
+    # Window Config
+    langUrl = None
+    InstallWindow = Toplevel(Settings)
+    InstallWindow.title(lang.CryptMain['SettingsLangLabel'])
+    InstallWindow.resizable(0,0)
+    InstallWindow.focus()
+    InstallWindow.transient(Settings)
+    InstallWindow.grab_set()
+    logger.info('Loaded Window config')
 
+    Label(InstallWindow, text=lang.CryptMain['SettingsLangLabel'] , font=('Helvetica', 14, font.BOLD, UNDERLINE)).grid(row=0, column=0, columnspan=2, pady=3)
     
+    frame = Frame(InstallWindow)
+    frame.grid(row=1, column=0, padx=10, pady=12)
 
-def switchSymmetric():
-    global frameA0, frameA1, frameA2, frameA3, TitleLabelA
+    # Gets List of installed Languages
+    langList = []
+    for entry in os.scandir(f'{os.getcwd()}/Languages'):
+        if entry.is_file() and entry.name.rsplit('.')[1] == 'py':
+            langList.append(entry.name.rsplit('.')[0])
+
+    # Requests the Languages from Github
+    gitLangs = []
+    for item in requests.get('https://api.github.com/repos/jasger9000/Cryptographer/git/trees/master').json()['tree']:
+        if item['path'] == 'Languages':
+            for item in requests.get(f'https://api.github.com/repos/jasger9000/Cryptographer/git/trees/{item["sha"]}').json()['tree']:
+                if Path(item['path']).suffix == '.py':
+                    gitLangs.append(item['path'])
+
+    # Creates List of installable Languages
+    newLangs = []
+    for item in gitLangs:
+        if item not in langList:
+            newLangs.append(item.rstrip('.py'))
+    
+    langBox = Combobox(frame, values=newLangs, state='readonly')
+    InstallBtn = Button(frame, text=lang.SettingsLabels['AddLangBtn'], command=lambda: [request.urlretrieve(f'https://raw.githubusercontent.com/jasger9000/Cryptographer/master/Languages/{langBox.get()}.py', f'Languages/{langBox.get()}.py'), langUrl is None])
+    InstallBtn.grid(row=1, column=1)
+    if len(newLangs) == 0:
+        langBox.set(lang.Messages['NoNewLang'])
+        InstallBtn['state'] = 'disabled'
+
+    langBox.grid(row=1, column=0)
     
     if loaded is True and config['State']['Mode'] == 'Asymmetric':
         Asym_Cryptographer.Unload(frameB0, frameB1, frameB2, frameB3, TitleLabelB)
@@ -289,11 +424,14 @@ def LoadFilesTypes(lang):
         (lang.fileTypes['PublicKey'], '*.pub_key'),                                                                                                         # 8
         )
 
+    if config['Settings']['CFUatStartup'] == '1':
+        threading.Thread(target=lambda: CheckForUpdates('automatic')).start()
 
-def UpdateConfig(Section: str, Option: str, Value: str):
-    config.set(Section, Option, Value)
-    with open('config.ini', 'w') as f:
-            config.write(f)
+    if config['State']['Mode'] == 'Symmetric':
+        SwitchMode('Symmetric')
+    elif config['State']['Mode'] == 'Asymmetric':
+        SwitchMode('Asymmetric')
+    root.mainloop()
 
 
 if __name__ == '__main__':
