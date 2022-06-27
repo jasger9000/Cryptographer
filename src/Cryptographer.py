@@ -126,58 +126,58 @@ def OpenSettings():
     logger.info('Loaded Window config')
 
     
-    Label(Settings, text=lang.CryptMain['HelpSettingsLabel'] , font=('Helvetica', 14, font.BOLD, UNDERLINE)).grid(row=0, column=0, columnspan=2, pady=12)
-    column1 = Frame(Settings)
-    column1.grid(row=1, column=0, padx=10)
+    Label(Settings, text=lang.CryptMain['HelpSettingsLabel'] , font=('Helvetica', 14, font.BOLD, UNDERLINE)).grid(row=0, column=0, pady=12)
+    SettingsFrame = Frame(Settings)
+    SettingsFrame.grid(row=1, column=0, padx=20)
 
-    column2 = Frame(Settings)
-    column2.grid(row=1, column=1, padx=10)
+    frame = Frame(Settings)
+    frame.grid(row=2, column=0, columnspan=2, padx=10, pady=(0, 12))
 
-    column3 = Frame(Settings)
-    column3.grid(row=2, column=1, pady=20)
-
+    Label(SettingsFrame, text=lang.SettingsLabels['General'], font=('Helvetica', 8, font.BOLD, UNDERLINE)).grid(row=0, column=0, pady=(12, 2))
 
     # Language Setting
-    Label(column1, text=lang.SettingsLabels['LangLabel']).grid(row=0, pady=5)
+    Label(SettingsFrame, text=lang.SettingsLabels['LangLabel']).grid(row=1, column=0, pady=5)
     langList = []
     for entry in os.scandir(f'{os.getcwd()}/Languages'):
         if entry.is_file() and entry.name.rsplit('.')[1] == 'py':
             langList.append(entry.name.rsplit('.')[0])
-    langBox = Combobox(column2, values=langList, state='readonly')
+    langBox = Combobox(SettingsFrame, values=langList, state='readonly')
     langBox.set(lang.Language)
     langBox.bind('<<ComboboxSelected>>', LoadLang)
-    langBox.grid(row=0, pady=5)
-    Button(column2, text=lang.SettingsLabels['AddLangBtn'], command=InstallNewLanguage).grid(row=0, column=1, pady=5)
+    langBox.grid(row=1, column=1, pady=5)
+    Button(SettingsFrame, text=lang.SettingsLabels['AddLangBtn'], command=InstallNewLanguage).grid(row=1, column=2, pady=5)
 
     # Save key?
-    Label(column1, text=lang.SettingsLabels['RememberKeyLabel']).grid(row=1, pady=5)
+    Label(SettingsFrame, text=lang.SettingsLabels['RememberKeyLabel']).grid(row=2, column=0, pady=5)
     saveKey = IntVar()
     saveKey.set(config['Settings']['SaveLastKey'])
-    Checkbutton(column2, variable=saveKey, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'SaveLastKey', str(saveKey.get()))).grid(row=1, pady=5)
+    Checkbutton(SettingsFrame, variable=saveKey, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'SaveLastKey', str(saveKey.get()))).grid(row=2, column=1, pady=5)
 
     # Automatic CFU?
-    Label(column1, text=lang.SettingsLabels['AutoCFULabel']).grid(row=2, pady=5)
+    Label(SettingsFrame, text=lang.SettingsLabels['AutoCFULabel']).grid(row=3, column=0, pady=5, padx=(0, 20))
     autoCFU = IntVar()
     autoCFU.set(config['Settings']['CFUatStartup'])
-    Checkbutton(column2, variable=autoCFU, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'CFUatStartup', str(autoCFU.get()))).grid(row=2, pady=5)
+    Checkbutton(SettingsFrame, variable=autoCFU, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'CFUatStartup', str(autoCFU.get()))).grid(row=3, column=1, pady=5)
 
     # Light/Dark/Windows mode
+    Label(SettingsFrame, text=lang.SettingsLabels['Themes'], font=('Helvetica', 8, font.BOLD, UNDERLINE)).grid(row=4, column=0, pady=(12, 2))
+
     theme = IntVar()
     theme.set(config['Settings']['theme'])
-    Label(column1, text=lang.SettingsLabels['LightTheme']).grid(row=3, pady=(20, 5))
-    Radiobutton(column2, variable=theme, value=1, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=3, pady=(20, 8))
+    Label(SettingsFrame, text=lang.SettingsLabels['LightTheme']).grid(row=5, pady=5)
+    Radiobutton(SettingsFrame, variable=theme, value=1, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=5, column=1, pady=5)
 
-    Label(column1, text=lang.SettingsLabels['DarkTheme']).grid(row=4, pady=5)
-    Radiobutton(column2, variable=theme, value=2, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=4, pady=8)
+    Label(SettingsFrame, text=lang.SettingsLabels['DarkTheme']).grid(row=6, pady=5)
+    Radiobutton(SettingsFrame, variable=theme, value=2, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=6, column=1, pady=5)
 
-    # Label(column1, text='Sync theme').grid(row=5, pady=5) # ! NEEDS TO CHANGE WITH LANG
-    # Radiobutton(column2, variable=theme, value=3, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=5, pady=8)
+    # Label(SettingsFrame, text='Sync theme').grid(row=7, pady=5) # ! NEEDS TO CHANGE WITH LANG
+    # Radiobutton(SettingsFrame, variable=theme, value=3, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=7, pady=5)
 
     
     # Default and Apply Button
-    DefaultBtn = Button(column3, text=lang.SettingsLabels['DefaultBtn'], command=lambda: [LoadConfig(True), root.destroy(), os.startfile(__file__)])
+    DefaultBtn = Button(frame, text=lang.SettingsLabels['DefaultBtn'], command=lambda: [LoadConfig(True), root.destroy(), os.startfile(__file__)])
     DefaultBtn.grid(row=0, pady=5)
-    ApplyBtn = Button(column3, state='disabled',text=lang.SettingsLabels['ApplyBtn'], command=lambda: [root.destroy(), os.startfile(__file__)])
+    ApplyBtn = Button(frame, state='disabled',text=lang.SettingsLabels['ApplyBtn'], command=lambda: [root.destroy(), os.startfile(__file__)])
     ApplyBtn.grid(row=0, column=1, pady=5)
     
     root.wait_window()

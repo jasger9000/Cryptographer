@@ -57,14 +57,17 @@ Messages = {
     'UnknownMessage': f"Es ist ein Unbekannte Fehler aufgetreten.\nBitte öffne ein 'issue' und hängen Sie die Logdatei Ihrer aktuellen Sitzung an.\nGithub: https://github.com/jasger9000/Cryptographer\nLog file: {os.getcwd()}\Cryptographer.log"
 }
 SettingsLabels = {
+    'General': 'Allgemein',
     'AddLangBtn': 'Neu Sprache hinzufügen',
     'LangLabel': 'Sprache    ',
     'RememberKeyLabel': 'Schlüssel Merken     ',
     'AutoCFULabel': 'Beim Start auf Updates prüfen?',
-    'DefaultBtn': 'Zurücksetzen',
-    'ApplyBtn': 'Änderungen übernehmen',
+
+    'Themes': 'Designs',
     'LightTheme': 'Helles Design',
     'DarkTheme': 'Dunkles Design',
+    'DefaultBtn': 'Zurücksetzen',
+    'ApplyBtn': 'Änderungen übernehmen',
 }
 NewUpdateTrue = {
     'Title': 'Neue Version verfügbar',
