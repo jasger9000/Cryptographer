@@ -419,9 +419,9 @@ def main():
     ModeMenu.add_command(label=lang.CryptMain['ModeAsymLabel'], command=lambda: SwitchMode('Asymmetric'))
     menubar.add_cascade(label=lang.CryptMain['ModeMenu'], menu=ModeMenu)
 
-    # History Menu
-    HistoryMenu = Menu(menubar, tearoff=0)
-    menubar.add_cascade(label=lang.CryptMain['HistoryMenu'], menu=HistoryMenu)
+    # # History Menu
+    # HistoryMenu = Menu(menubar, tearoff=0)
+    # menubar.add_cascade(label=lang.CryptMain['HistoryMenu'], menu=HistoryMenu)
     
     # Help Menu
     HelpMenu = Menu(menubar, tearoff=0)
@@ -430,7 +430,7 @@ def main():
     HelpMenu.add_separator()
     HelpMenu.add_command(label=lang.CryptMain['HelpSettingsLabel'], command=OpenSettings)
     HelpMenu.add_separator()
-    HelpMenu.add_command(label=lang.CryptMain['HelpAboutLabel'])
+    # HelpMenu.add_command(label=lang.CryptMain['HelpAboutLabel'])
     HelpMenu.add_command(label=lang.CryptMain['HelpCFULabel'], command=lambda: CheckForUpdates('manual'))
     menubar.add_cascade(label=lang.CryptMain['HelpMenu'], menu=HelpMenu)
 
