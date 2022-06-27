@@ -1,7 +1,9 @@
 import importlib
+from pathlib import Path
 import Asym_Cryptographer
 import Sym_Cryptographer
-from tkinter import HORIZONTAL, Button, Checkbutton, IntVar, Label, Toplevel, messagebox, Tk, Menu, TclError, ttk
+from tkinter import HORIZONTAL, UNDERLINE, IntVar, Toplevel, font, messagebox, Tk, Menu, TclError
+from ttkbootstrap import Button, Combobox, Notebook, Progressbar, Entry, Radiobutton, Checkbutton, Label, Frame, LabelFrame, Style
 import logging
 import requests
 from packaging.version import parse
@@ -14,16 +16,16 @@ from configparser import ConfigParser
 import threading
 import sys
 
-sys.path.insert(0, 'Languages')
+sys.path.insert(0, f'{os.getcwd()}/Languages') 
 
 # logger config
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 fmt = logging.Formatter('[%(levelname)s] %(asctime)s - %(name)s - %(message)s')
 
 # fileHandler config
 fileHandler = logging.FileHandler('Cryptographer.log')
-fileHandler.setLevel(logging.INFO)
+fileHandler.setLevel(logging.DEBUG)
 fileHandler.setFormatter(fmt)
 logger.addHandler(fileHandler)
 with open('Cryptographer.log', 'w') as f:
@@ -97,9 +99,9 @@ def LoadConfig(Force: str):
 
         lang = LoadLang(config['Settings']['Language'])
         if config['Settings']['theme'] == '1':
-            ttkbootstrap.Style('litera')
+            Style('litera')
         else:
-            ttkbootstrap.Style('darkly')
+            Style('darkly')
         logger.info('Config loaded')
     return config
 
@@ -229,13 +231,31 @@ def InstallNewLanguage():
 
     langBox.grid(row=1, column=0)
     
-    if loaded is True and config['State']['Mode'] == 'Asymmetric':
-        Asym_Cryptographer.Unload(frameB0, frameB1, frameB2, frameB3, TitleLabelB)
+def SwitchMode(mode: str):
+    if TitleLabel.cget('text') == '' or config['State']['Mode'] != mode:
+        logger.info('Switching Mode')
+        try:
+            if EncryptFrame.winfo_exists():
+                EncryptFrame.destroy()
+                DecryptFrame.destroy()
+                KeyFrame.destroy()
+        except NameError:
+            pass
+        LoadFrames()
+        root.geometry('')
 
-    if loaded is False or config['State']['Mode'] != 'Symmetric':      
-        logger.info('Loading Symmetric Cryptographer')
-        frameA0, frameA1, frameA2, frameA3, TitleLabelA = Sym_Cryptographer.main(root, version, lang.Language)
+        if mode == 'Symmetric':      
+            Sym_Cryptographer.Window(EncryptFrame, DecryptFrame, KeyFrame, out, lang.Language)
+            KeyFrame.config(text=lang.Main['KeyTitle'])
+            root.title(f'{lang.Main["title"]} {version}')
+            TitleLabel.config(text=lang.Main["title"])
         UpdateConfig('State', 'Mode', 'Symmetric')
+        elif mode == 'Asymmetric':
+            Asym_Cryptographer.Window(EncryptFrame, DecryptFrame, KeyFrame, out, lang.Language)
+            KeyFrame.config(text=lang.AsymMain['KeysTitle'])
+            root.title(f'{lang.AsymMain["title"]} {version}')
+            TitleLabel.config(text=lang.AsymMain["title"])
+            UpdateConfig('State', 'Mode', 'Asymmetric')
         logger.info('Loading complete')
 
 def switchAsymmetric():
@@ -298,11 +318,8 @@ def InstallNewUpdate(latest: str):
 
 
 def main():
-    global root, loaded
-    loaded = False
-
-    if os.path.basename(os.getcwd()) == f'Cryptographer {version}':
-        os.rename(os.path.basename(os.getcwd()), 'Cryptographer.py')
+    global root, ApplyBtn, TitleLabel, out, KeyLoadIndicator
+    ApplyBtn = None
 
     # Tk Config
     root = Tk()
@@ -310,7 +327,7 @@ def main():
     root.geometry('300x300')
     LoadConfig()
     try:
-        root.title(f'Cryptographer ver. {version}')
+        root.title(f'Cryptographer {version}')
         root.iconbitmap('Cryptographer.exe')
     except TclError:
         logger.warning("Couldn't find icon, continuing without")
@@ -323,17 +340,13 @@ def main():
             InstallNewUpdate(requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
         else:
             root.destroy()
-    if config['State']['Mode'] == 'Symmetric':
-        switchSymmetric()
-    elif config['State']['Mode'] == 'Asymmetric':
-        switchAsymmetric()
 
     menubar = Menu(root)
     ModeMenu = Menu(menubar, tearoff=0)
     
     # Mode Menu
-    ModeMenu.add_command(label=lang.CryptMain['ModeSymLabel'], command=switchSymmetric)
-    ModeMenu.add_command(label=lang.CryptMain['ModeAsymLabel'], command=switchAsymmetric)
+    ModeMenu.add_command(label=lang.CryptMain['ModeSymLabel'], command=lambda: SwitchMode('Symmetric'))
+    ModeMenu.add_command(label=lang.CryptMain['ModeAsymLabel'], command=lambda: SwitchMode('Asymmetric'))
     menubar.add_cascade(label=lang.CryptMain['ModeMenu'], menu=ModeMenu)
 
     # History Menu
@@ -352,77 +365,17 @@ def main():
     menubar.add_cascade(label=lang.CryptMain['HelpMenu'], menu=HelpMenu)
 
     root.config(menu=menubar)
-    
-    if config['Settings']['CFUatStartup'] == '1':
-        threading.Thread(target=lambda: CheckForUpdates('automatic')).start()
 
-    loaded = True
-    root.mainloop()
+    # Output
+    frame3 = LabelFrame(root, text=lang.Main['OutputTitle'])
+    frame3.grid(row=2, column=0, padx=10, pady=12, columnspan=2)
 
-
-def LoadLang(l: str):
-    if type(l) is not str:
-        l = langBox.get()
-    try:
-        lang = importlib.import_module(l)
-        UpdateConfig('Settings', 'Language', l)
-    except ModuleNotFoundError:
-        logger.error('Language Module not found, continuing with English')
-        messagebox.showerror("Language not found", "Couldn't find the Language you are trying to use, please reinstall the Language pack")
-        UpdateConfig('Settings', 'Language', 'English')
-        lang = importlib.import_module('English')
-        logger.exception('Language Module not found, continuing with English')
-    except NameError: # Triggers when config is not defined e.g. when lang is imported in sym or Asym
-        pass
-    return lang
-
-
-def LoadConfig():
-    global config, lang
-    config = ConfigParser()
-
-    logger.info('Searching for config')
-    if os.path.exists('config.ini'):
-        logger.info('Config found, loading...')
-        config.read('config.ini')
-
-        lang = LoadLang(config['Settings']['Language'])
-        logger.info('Config loaded')
-    else:
-        logger.warning('Config not found, generating new')
-        config.add_section('Settings')
-        config.set('Settings', 'Language', 'English')
-        config.set('Settings', 'SaveLastKey', '0')
-        config.set('Settings', 'Password', 'False')
-        config.set('Settings', 'CFUatStartup', '1')
-        config.set('Settings', 'Mode', 'Light')
-        config.set('Settings', 'DefaultPath', os.path.expandvars(R'C:\Users\$USERNAME\Documents'))
+    out = Entry(frame3, width=40, state='readonly')
+    out.grid(row=0, column=0, padx=5, rowspan=2)
+    Button(frame3, text=lang.Main['CopyBtn'], command=Copy).grid(row=0, column=1, padx=10)
+    Button(frame3, text=lang.Main['DeleteBtn'], command=Delete).grid(row=1, column=1, padx=10, pady=6)
         
-        config.add_section('State')
-        config.set('State', 'Mode', 'None')
-        config.set('State', 'Keyfile', 'None')
-        config.set('State', 'PublicKeyfile', 'None')
-        config.set('State', 'PrivateKeyfile', 'None')
-        config.set('State', 'locked', 'False')
-        config.set('State', 'Password', 'None')
-        with open('config.ini', 'w') as f:
-            config.write(f)
-        lang = LoadLang('English')
-        logger.info('New Config generated')
-    return config
 
-def LoadFilesTypes(lang):
-    return (
-        (lang.fileTypes['Text'], ('*.txt', '*.doc', '*.docx', '*.log', '*.msg', '*.odt', '*.pages', '*.rtf', '*.tex', '*.wpd', '*.wps')),                   # 0
-        (lang.fileTypes['Video'], ('*.mp4', '*.mov', '*.avi', '*.flv', '*.mkv', '*.wmv', '*.avchd', '*.webm', '*MPEG-4', '*.H.264')),                       # 1
-        (lang.fileTypes['Audio'], ('*.aif', '*.aiff', '*.iff', '*.m3u', '*.m4a', '*.mp3', '*.mpa', '*.wav', '*.wma', '*.aup3', '*.aup', '*.ogg', '*.mp2')), # 2
-        (lang.fileTypes['Picture'], ('*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp', '*.raw', '*.tiff', '*.psd', '*.cr2')),                                   # 3
-        (lang.fileTypes['All'], '*.*'),                                                                                                                     # 4
-        (lang.fileTypes['Encrypted'], '*.Encrypted'),                                                                                                       # 5
-        (lang.fileTypes['Key'], '*.key'),                                                                                                                   # 6
-        (lang.fileTypes['PrivateKey'], '*.priv_key'),                                                                                                       # 7
-        (lang.fileTypes['PublicKey'], '*.pub_key'),                                                                                                         # 8
-        )
 
     if config['Settings']['CFUatStartup'] == '1':
         threading.Thread(target=lambda: CheckForUpdates('automatic')).start()
@@ -435,15 +388,4 @@ def LoadFilesTypes(lang):
 
 
 if __name__ == '__main__':
-    # TODO Make apply Btn only appear after changes
-    # TODO Keyfile
-    # TODO PublicKeyfile
-    # TODO PrivateKeyfile
-    # TODO locked
-    # TODO Password
-    # TODO Make VersionNotFound Window always focused
-    # TODO Make installation Progress Bar
-    # TODO History
-    # TODO Light/dark mode
-    # TODO DefaultPath
     main()

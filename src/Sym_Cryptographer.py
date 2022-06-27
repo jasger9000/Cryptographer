@@ -1,7 +1,10 @@
 import base64
-from tkinter import UNDERLINE, filedialog, messagebox, Tk, Label, Button, Entry, LabelFrame, font
+from tkinter import filedialog, messagebox
+from tktooltip import ToolTip 
+from PIL import ImageTk, Image
+from tkinter.ttk import Button, Entry, Frame, Label
 from cryptography.fernet import Fernet, InvalidToken
-import pathlib
+from pathlib import Path
 import logging
 import os
 
@@ -112,9 +115,8 @@ def Cryptography2(mode: str, entry: Entry, keyEntry: Entry):
     try:
         keyPath = keyEntry.get()
         filePath = entry.get()
-        if keyPath and filePath:
+        if key != '' and filePath != '':
             try:
-                # Checks for user conformation if file is too big
                 if os.path.getsize(filePath) >= 1073741824:
                     logger.info(f'shows askYesNoPrompt1 in Cryptography2 {mode} mode')
                     userConfirm = messagebox.askyesno(title=lang.Messages['TooBigTitle'], message=lang.Messages['TooBigMessage2'].split('$')[0] + lang.Dialog[mode] + lang.Messages['TooBigMessage2'].split('$')[1])
@@ -128,7 +130,7 @@ def Cryptography2(mode: str, entry: Entry, keyEntry: Entry):
             if userConfirm:
                 try:
                     # import Key
-                    with open(keyPath, 'rb') as f:
+                    with open(key, 'rb') as f:
                         k = Fernet(f.read())  # Imports the Key
                     logger.info(f'Loaded Key')
                 except FileNotFoundError:
@@ -140,9 +142,11 @@ def Cryptography2(mode: str, entry: Entry, keyEntry: Entry):
                 logger.info(f'Loaded File Contents')
 
                 if mode == 'Encrypt':
+                    
+                    extension = Path(filePath).suffix
                     output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind("/") + 1:len(filePath.replace(extension, ""))]}', title=lang.Dialog['Save'] + lang.Dialog['Encrypted'] + lang.Dialog['file'], filetypes=(fileTypes[5], fileTypes[0], fileTypes[4]))
                     logger.info('got new filePath')
-                    contents = base64.b64encode(extention.encode()) + b'$' + base64.b64encode(k.encrypt(contents)) # Format: extension$contents
+                    contents = base64.b64encode(extension.encode()) + b'$' + base64.b64encode(k.encrypt(contents)) # Format: extension$contents
                     # writes encrypted Contents to file
                     with open(output, 'wb') as f:
                         f.write(contents)
@@ -174,18 +178,20 @@ def Cryptography2(mode: str, entry: Entry, keyEntry: Entry):
     except ValueError:
         messagebox.showerror(title=lang.Dialog[f'{mode}ion'] + lang.Messages['ValueTitle'], message=lang.Dialog[f'{mode}ion'] + lang.Messages['ValueMessage'])
         logger.exception(f"Showed ValueError")
+    except fileNotFoundError:
+        messagebox.showwarning(title=lang.Messages['fileNotFoundTitle'], message=lang.Messages['fileNotFoundMessage'])
+        logger.info(f"The File The User Tried To Use didn't Exist")
     except InvalidToken:
         messagebox.showerror(title=f'Wrong Key entered!', message=f'This is the wrong Key to {mode} this message! Use the right Key!')
         logger.exception(f'Decryption failed because of a Decryption Error in {mode} mode')
     except MemoryError:
         messagebox.showerror(title=lang.Dialog[f'{mode}ion'] + lang.Messages['TooBigTitle'], message=lang.Messages['TooBigMessage'].split('$')[0] + lang.Dialog[f'{mode}ed'] + lang.Messages['TooBigMessage'].split('$')[1])
         logger.info(f'{mode}ion failed, file was too big')
-    except fileNotFoundError:
-        messagebox.showwarning(title='File not found', message=f'The File you would Like to {mode} was not Found!\nPlease Use an Existing File!')
-        logger.info(f"The File The User Tried To Use didn't Exist")
     except KeyNotFoundError:
         messagebox.showwarning(title=lang.Messages['KeyNotExistTitle'], message=lang.Messages['KeyNotExistMessage'].split('$')[0] + lang.Dialog['Key'] + lang.Messages['KeyNotExistMessage'].split('$')[1])
         logger.info(f"The Key the User tried to Use does Not Exist")
+    except FileNotFoundError:
+        pass
     except Exception:
         messagebox.showerror(title=lang.Messages['UnknownTitle'], message=lang.Messages['UnknownMessage'])
         logger.exception(f'Unknown error/uncaught exception in Cryptography2 - {mode} mode')
@@ -193,28 +199,7 @@ def Cryptography2(mode: str, entry: Entry, keyEntry: Entry):
         out.config(state='readonly')
         logger.info('Cryptography2 finished')
 
-def Copy(root: Tk):
-    logger.info('Copy function initiated')
-    try:
-        root.clipboard_clear()
-        root.clipboard_append(out.get())
-    except Exception:
-        logger.exception(f'Unknown error/uncaught exception in Copy function')
-        messagebox.showerror(title='Unknown error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {os.getcwd()}/Cryptographer.log')
-    finally:
-        logger.info('Copy function finished')
 
-def Delete():
-    logger.info('Delete function initiated')
-    try:
-        out.config(state='normal')
-        out.delete(0, 'end')
-    except Exception:
-        logger.exception(f'Unknown/uncaught exception in Delete function')
-        messagebox.showerror(title='Unknown Error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {os.getcwd()}/Cryptographer.log')
-    finally:
-        out.config(state='readonly')
-        logger.info('Delete function finished')
 
 def Window(EncryptFrame: Frame, DecryptFrame: Frame, KeyFrame, out: Entry, l: str):
     global fileTypes, img, lang, key, IndicatorTooltip, Indicator
@@ -264,23 +249,3 @@ def Window(EncryptFrame: Frame, DecryptFrame: Frame, KeyFrame, out: Entry, l: st
     Button(DecryptFrame, text=lang.Main['Decrypt'], command=lambda: Cryptography2('Decrypt', Decrypt2Entry, out)).grid(row=3,column=1) # Decrypt Btn
     Button(DecryptFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseDecryptDialog(Decrypt2Entry)).grid(row=3, column=2, padx=(0,5)) # BrowseDecryptDialog
     logger.info('loaded decrypt options')
-
-    # Output
-    frame3 = LabelFrame(root, text='Output:', font=('Arial', 12, UNDERLINE), padx=10, pady=12, borderwidth=0)
-    frame3.grid(row=3, column=0, padx=10, columnspan=2)
-
-    Button(frame3, text='Delete', command=Delete).grid(row=0, column=0)
-    out = Entry(frame3, font=('Arial', 14), width=27, state='readonly')
-    out.grid(row=0, column=1)
-    Button(frame3, text='Copy', command=lambda: Copy(root)).grid(row=0, column=2)
-
-
-    return frame0, frame1, frame2, frame3, TitleLabel
-
-
-def Unload(frame0: LabelFrame,frame1: LabelFrame,frame2: LabelFrame,frame3: LabelFrame, TitleLabel: Label):
-    frame0.destroy()
-    frame1.destroy()
-    frame2.destroy()
-    frame3.destroy()
-    TitleLabel.destroy()

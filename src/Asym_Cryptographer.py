@@ -1,4 +1,7 @@
-from tkinter import UNDERLINE, filedialog, messagebox, Tk, Label, Button, Entry, LabelFrame, font
+from tkinter import UNDERLINE, Frame, filedialog, messagebox, Label, Entry, LabelFrame
+from tktooltip import ToolTip 
+from PIL import ImageTk, Image
+from tkinter.ttk import Button
 from cryptography.fernet import Fernet
 import rsa
 import base64
@@ -58,25 +61,25 @@ def BrowseDecryptDialog(decrypt2Entry: Entry):
         decrypt2Entry.delete(0,"end")
         decrypt2Entry.insert(0, browseDecryptDialog) 
 
-def GenerateKeyPair(PublickeyEntry: Entry, PrivateKeyEntry: Entry):
+def GenerateKeyPair(PublicKeyEntry: Entry, PrivateKeyEntry: Entry):
     logger.info('Initiated GenerateKeyPair')
-    publickeyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=os.path.expandvars("$USERNAME's " + lang.Dialog['Public']), title=lang.Dialog['Save'] + lang.Dialog['Public'], filetypes=(fileTypes[8], fileTypes[4]))
-    if publickeyPath:
+    publicKeyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=os.path.expandvars("$USERNAME's " + lang.Dialog['Public']), title=lang.Dialog['Save'] + lang.Dialog['Public'], filetypes=(fileTypes[8], fileTypes[4]))
+    if publicKeyPath:
         privateKeyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=lang.Dialog['Private'], title=lang.Dialog['Save'] + lang.Dialog['Private'], filetypes=(fileTypes[7], fileTypes[4]))
         if privateKeyPath:
             Keys = rsa.newkeys(2048)
             Keys += (Fernet.generate_key(), )
-            with open(publickeyPath, 'wb') as f:
+            with open(publicKeyPath, 'wb') as f:
                 f.write(Keys[0].save_pkcs1('PEM'))
             logger.info('User generated Public key')
             with open(privateKeyPath, 'wb') as f:
                 f.write(Keys[2] + b'$' + Keys[1].save_pkcs1("PEM")) # Format: symKey$privateKey
             logger.info('User generated Private key')
-            PublickeyEntry.delete(0,'end')
+            PublicKeyEntry.delete(0,'end')
             PrivateKeyEntry.delete(0, 'end')
 
-            PublickeyEntry.insert(0, privateKeyPath)
-            PrivateKeyEntry.insert(0, publickeyPath)
+            PublicKeyEntry.insert(0, privateKeyPath)
+            PrivateKeyEntry.insert(0, publicKeyPath)
             logger.info('finished GenerateKeyPair')
         else:
             messagebox.showwarning(title=lang.Messages['AbortedKeyTitle'], message=lang.Messages['AbortedKeyMessage'])
@@ -186,7 +189,7 @@ def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
                 logger.info('Loaded File Contents')
                 
                 if mode == 'Encrypt':
-                    extention = pathlib.Path(filePath).suffix
+                    extension = pathlib.Path(filePath).suffix
                     output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind("/") + 1:len(filePath.replace(extension, ""))]}', title=lang.Dialog['Save'] + lang.Dialog['Encrypted'] + lang.Dialog['file'], filetypes=(fileTypes[5],fileTypes[0],fileTypes[4]))
                     logger.info('got new filePath')
                     try:
@@ -198,7 +201,7 @@ def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
                     
                     contents = Fernet(symKey).encrypt(contents)
                     symKey = rsa.encrypt(symKey, rsa.PublicKey.load_pkcs1(publicKey))
-                    contents = base64.b64encode(extention.encode()) + b'$' + base64.b64encode(symKey) + b'$' + base64.b64encode(contents) # Format: extention$symKey$contents
+                    contents = base64.b64encode(extension.encode()) + b'$' + base64.b64encode(symKey) + b'$' + base64.b64encode(contents) # Format: extension$symKey$contents
                     with open(output, 'wb') as f:
                         f.write(contents)
                     logger.info('Created contents and saved them to filePath')
@@ -253,16 +256,6 @@ def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
         out.config(state='readonly')
         logger.info('Cryptography2 finished')
     
-def Copy(root: Tk):
-    logger.info('Copy function initiated')
-    try:
-        root.clipboard_clear()
-        root.clipboard_append(out.get())
-    except Exception:
-        logger.exception(f'Unknown error/uncaught exception in Copy function')
-        messagebox.showerror(title='Unknown error', message=f'An Unknown Error occurred.\nPlease open an issue at https://github.com/jasger9000/Cryptographer and attach the log file of your current session.\nLog file: {os.getcwd()}/Cryptographer.log')
-    finally:
-        logger.info('Copy function finished')
 
     global fileTypes, lang
 
@@ -325,22 +318,3 @@ def Copy(root: Tk):
     Button(DecryptFrame, text=lang.Main['Decrypt'], command=lambda: Cryptography2('Decrypt', Decrypt2Entry, publicKeyEntry, PrivateKeyEntry, out)).grid(row=3,column=1)
     Button(DecryptFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseDecryptDialog(Decrypt2Entry)).grid(row=3, column=2)
     logger.info('loaded decrypt options') # Section Loaded
-
-    # Output
-    frame3 = LabelFrame(root, text='Output:', font=('Arial', 12, UNDERLINE), padx=10, pady=12, borderwidth=0)
-    frame3.grid(row=3, column=0, padx=10, columnspan=2)
-
-    Button(frame3, text='Delete', command=Delete).grid(row=0, column=0)
-    out = Entry(frame3, font=('Arial', 14), width=27, state='readonly')
-    out.grid(row=0, column=1)
-    Button(frame3, text='Copy', command=lambda: Copy(root)).grid(row=0, column=2)
-
-    return frame0, frame1, frame2, frame3, TitleLabel
-
-def Unload(frame0: LabelFrame,frame1: LabelFrame,frame2: LabelFrame,frame3: LabelFrame, TitleLabel: Label):
-    frame0.destroy()
-    frame1.destroy()
-    frame2.destroy()
-    frame3.destroy()
-    TitleLabel.destroy()
-
