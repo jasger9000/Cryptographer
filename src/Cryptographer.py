@@ -37,6 +37,8 @@ streamHandler.setFormatter(fmt)
 streamHandler.setLevel(logging.DEBUG)
 logger.addHandler(streamHandler)
 
+version = 'v0.6.0'
+
 def LoadFileTypes(lang):
     return (
     (lang.fileTypes['Text'], ('*.txt', '*.doc', '*.docx', '*.log', '*.msg', '*.odt', '*.pages', '*.rtf', '*.tex', '*.wpd', '*.wps')),                   # 0
@@ -55,6 +57,10 @@ def LoadLang(l: str):
         l = langBox.get()
     try:
         lang = importlib.import_module(l)
+        if lang.version < 1:
+            logger.critical('Language pack too old')
+            messagebox.showerror('Language pack too old', 'The Language pack you are using is too old, please install a newer version')
+            return
         UpdateConfig('Settings', 'Language', l)
     except ModuleNotFoundError:
         logger.error('Language Module not found, continuing with English')
@@ -67,7 +73,7 @@ def LoadLang(l: str):
     return lang
 
 
-def LoadConfig(Force: str):
+def LoadConfig(Force: bool):
     global config, lang
     config = ConfigParser()
 
@@ -89,6 +95,8 @@ def LoadConfig(Force: str):
         config.set('State', 'PrivateKeyfile', 'None')
         config.set('State', 'locked', 'False')
         config.set('State', 'Password', 'None')
+        config.set('State', 'Version', '1')
+
         with open('config.ini', 'w') as f:
             config.write(f)
         lang = LoadLang('English')
@@ -97,15 +105,20 @@ def LoadConfig(Force: str):
         logger.info('Config found, loading...')
         config.read('config.ini')
 
-        lang = LoadLang(config['Settings']['Language'])
-        logger.info('Using Language: ' + config['Settings']['Language'])
-        if config['Settings']['theme'] == '1':
-            Style('litera')
-            logger.info('Using Light theme')
+        if int(config['State']['Version']) < 1:
+            logger.warning('Config too old generating new')
+            os.remove('config.ini')
+            LoadConfig(True)
         else:
-            Style('darkly')
-            logger.info('Using Dark theme')
-        logger.info('Config loaded')
+            lang = LoadLang(config['Settings']['Language'])
+            logger.info('Using Language: ' + config['Settings']['Language'])
+            if config['Settings']['theme'] == '1':
+                Style('litera')
+                logger.info('Using Light theme')
+            else:
+                Style('darkly')
+                logger.info('Using Dark theme')
+            logger.info('Config loaded')
     return config
 
 def UpdateConfig(Section: str, Option: str, Value: str):
@@ -210,7 +223,7 @@ def InstallNewLanguage():
     for entry in os.scandir(f'{os.getcwd()}/Languages'):
         if entry.is_file() and entry.name.rsplit('.')[1] == 'py':
             langList.append(entry.name.rsplit('.')[0])
-
+    
     # Requests the Languages from Github
     gitLangs = []
     for item in requests.get('https://api.github.com/repos/jasger9000/Cryptographer/git/trees/master').json()['tree']:
@@ -218,13 +231,13 @@ def InstallNewLanguage():
             for item in requests.get(f'https://api.github.com/repos/jasger9000/Cryptographer/git/trees/{item["sha"]}').json()['tree']:
                 if Path(item['path']).suffix == '.py':
                     gitLangs.append(item['path'])
-
+    
     # Creates List of installable Languages
     newLangs = []
     for item in gitLangs:
         if item not in langList:
             newLangs.append(item.rstrip('.py'))
-    
+
     langBox = Combobox(frame, values=newLangs, state='readonly')
     InstallBtn = Button(frame, text=lang.SettingsLabels['AddLangBtn'], command=lambda: [request.urlretrieve(f'https://raw.githubusercontent.com/jasger9000/Cryptographer/master/Languages/{langBox.get()}.py', f'Languages/{langBox.get()}.py'), langUrl is None])
     InstallBtn.grid(row=1, column=1)
@@ -233,7 +246,7 @@ def InstallNewLanguage():
         InstallBtn['state'] = 'disabled'
 
     langBox.grid(row=1, column=0)
-    
+
 def SwitchMode(mode: str):
     if TitleLabel.cget('text') == '' or config['State']['Mode'] != mode:
         logger.info('Switching Mode')
@@ -252,7 +265,7 @@ def SwitchMode(mode: str):
             KeyFrame.config(text=lang.Main['KeyTitle'])
             root.title(f'{lang.Main["title"]} {version}')
             TitleLabel.config(text=lang.Main["title"])
-        UpdateConfig('State', 'Mode', 'Symmetric')
+            UpdateConfig('State', 'Mode', 'Symmetric')
         elif mode == 'Asymmetric':
             Asym_Cryptographer.Window(EncryptFrame, DecryptFrame, KeyFrame, out, lang.Language)
             KeyFrame.config(text=lang.AsymMain['KeysTitle'])
@@ -263,7 +276,7 @@ def SwitchMode(mode: str):
 
 def LoadFrames():
     global EncryptFrame, DecryptFrame, KeyFrame
-    
+
     # Tabs
     TabRegister = Notebook(root)
     TabRegister.grid(row=1, column=0, padx=20)
@@ -366,7 +379,7 @@ def Delete():
 
 
 def main():
-    global root, ApplyBtn, TitleLabel, out, KeyLoadIndicator
+    global root, ApplyBtn, TitleLabel, out
     ApplyBtn = None
 
     # Tk Config
@@ -431,7 +444,7 @@ def main():
     out.grid(row=0, column=0, padx=5, rowspan=2)
     Button(frame3, text=lang.Main['CopyBtn'], command=Copy).grid(row=0, column=1, padx=10)
     Button(frame3, text=lang.Main['DeleteBtn'], command=Delete).grid(row=1, column=1, padx=10, pady=6)
-        
+
 
 
     if config['Settings']['CFUatStartup'] == '1':

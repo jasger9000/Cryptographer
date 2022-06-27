@@ -1,5 +1,6 @@
 import os
 Language = 'English'
+version = 1
 # if there is a '$'' in a key it stands for a variable and needs to be placed at the position, where the var should be in the final text 
 
 
