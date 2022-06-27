@@ -297,24 +297,63 @@ def CheckForUpdates(mode: str):
         messagebox.showinfo(lang.NewUpdateFalse['Title2'], lang.NewUpdateFalse['Message2'])
 
 def InstallNewUpdate(latest: str):
-    InstallWindow = Toplevel()
-    InstallBar = ttk.Progressbar(InstallWindow, orient=HORIZONTAL, length=100, mode='determinate')
-    InstallBar.grid(row=0, column=0, pady=20)
+    InstallWindow = Toplevel(root, padx=10)
+    InstallWindow.resizable(0,0)
+    InstallWindow.focus()
+    InstallWindow.transient(root)
+    InstallWindow.grab_set()
+
+    Label(InstallWindow, text=lang.CryptMain['InstallUpdateTitle']).grid(row=0, column=0, pady=6, padx=10)
+    InstallBar = Progressbar(InstallWindow, orient=HORIZONTAL, length=200, mode='determinate')
+    InstallBar.grid(row=1, column=0, ipady=8.499999999999999115)
+    FinishBtn = Button(InstallWindow, text='Finish', command=lambda: [logger.info('Finished installing, restarting now'), subprocess.Popen(f'"{os.getcwd()}/Cryptographer {latest}.exe"'), root.destroy()], state='disabled')
+    FinishBtn.grid(row=1, column=1)
+    ProgressLabel = Label(InstallWindow, text='')
+    ProgressLabel.grid(row=2, column=0, pady=10)
+    
     logger.info('Downloading Update')
+    ProgressLabel.config(text=lang.CryptMain['InstallUpdateProgress0'])
     file = f'{os.getcwd()}/Cryptographer.zip'
     url = f'https://github.com/jasger9000/Cryptographer/releases/download/{latest}/Cryptographer.zip'
     request.urlretrieve(url, file)
+    InstallBar['value'] += 66
     logger.info('Update downloaded')
 
+    ProgressLabel.config(text=lang.CryptMain['InstallUpdateProgress1'])
     with zipfile.ZipFile(file, 'r') as zip_ref:
         zip_ref.extractall(os.getcwd())
+    InstallBar['value'] += 66
     logger.info('Extracted Update')
 
+    ProgressLabel.config(text=lang.CryptMain['InstallUpdateProgress2'])    
     if os.path.exists(file):
         os.remove(file)
-    logger.info('Finished installing, restarting now')
-    subprocess.Popen(f'"{os.getcwd()}/Cryptographer {latest}.exe"')
-    root.destroy()
+    InstallBar['value'] += 67
+    ProgressLabel.config(text=lang.CryptMain['InstallUpdateProgress3'])
+    FinishBtn['state'] = 'normal'
+
+def Copy():
+    logger.info('Copy function initiated')
+    try:
+        root.clipboard_clear()
+        root.clipboard_append(out.get())
+    except Exception:
+        messagebox.showerror(title=lang.Messages['UnknownTitle'], message=lang.Messages['UnknownMessage'])
+        logger.exception(f'Unknown error/uncaught exception in Copy function')
+    finally:
+        logger.info('Copy function finished')
+
+def Delete():
+    logger.info('Delete function initiated')
+    try:
+        out.config(state='normal')
+        out.delete(0, 'end')
+    except Exception:
+        messagebox.showerror(title=lang.Messages['UnknownTitle'], message=lang.Messages['UnknownMessage'])
+        logger.exception(f'Unknown/uncaught exception in Delete function')
+    finally:
+        out.config(state='readonly')
+        logger.info('Delete function finished')
 
 
 def main():
