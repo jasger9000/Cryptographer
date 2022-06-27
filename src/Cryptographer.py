@@ -230,13 +230,13 @@ def InstallNewLanguage():
         if item['path'] == 'Languages':
             for item in requests.get(f'https://api.github.com/repos/jasger9000/Cryptographer/git/trees/{item["sha"]}').json()['tree']:
                 if Path(item['path']).suffix == '.py':
-                    gitLangs.append(item['path'])
+                    gitLangs.append(item['path'].rstrip('.py'))
     
     # Creates List of installable Languages
     newLangs = []
     for item in gitLangs:
         if item not in langList:
-            newLangs.append(item.rstrip('.py'))
+            newLangs.append(item)
 
     langBox = Combobox(frame, values=newLangs, state='readonly')
     InstallBtn = Button(frame, text=lang.SettingsLabels['AddLangBtn'], command=lambda: [request.urlretrieve(f'https://raw.githubusercontent.com/jasger9000/Cryptographer/master/Languages/{langBox.get()}.py', f'Languages/{langBox.get()}.py'), langUrl is None])
