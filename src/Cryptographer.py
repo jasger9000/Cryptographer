@@ -98,10 +98,13 @@ def LoadConfig(Force: str):
         config.read('config.ini')
 
         lang = LoadLang(config['Settings']['Language'])
+        logger.info('Using Language: ' + config['Settings']['Language'])
         if config['Settings']['theme'] == '1':
             Style('litera')
+            logger.info('Using Light theme')
         else:
             Style('darkly')
+            logger.info('Using Dark theme')
         logger.info('Config loaded')
     return config
 
@@ -258,21 +261,27 @@ def SwitchMode(mode: str):
             UpdateConfig('State', 'Mode', 'Asymmetric')
         logger.info('Loading complete')
 
-def switchAsymmetric():
-    global frameB0, frameB1, frameB2, frameB3, TitleLabelB
+def LoadFrames():
+    global EncryptFrame, DecryptFrame, KeyFrame
     
-    if loaded is True and config['State']['Mode'] == 'Symmetric':
-        Sym_Cryptographer.Unload(frameA0, frameA1, frameA2, frameA3, TitleLabelA)
+    # Tabs
+    TabRegister = Notebook(root)
+    TabRegister.grid(row=1, column=0, padx=20)
 
-    if loaded is False or config['State']['Mode'] != 'Asymmetric':   
-        logger.info('Loading Asymmetric Cryptographer')
-        frameB0, frameB1, frameB2, frameB3, TitleLabelB = Asym_Cryptographer.main(root ,version, lang.Language)
-        UpdateConfig('State', 'Mode', 'Asymmetric')
-        logger.info('Loading complete')
+    EncryptFrame = Frame(TabRegister)
+    DecryptFrame = Frame(TabRegister)
 
+    EncryptFrame.pack(fill='both', expand=1)
+    DecryptFrame.pack(fill='both', expand=1)
+
+    TabRegister.add(EncryptFrame, text=lang.Dialog['Encrypt'])
+    TabRegister.add(DecryptFrame, text=lang.Dialog['Decrypt'])
+
+    # Keyframe
+    KeyFrame = LabelFrame(root, text='')
+    KeyFrame.grid(row=1, column=1, padx=10)
 
 def CheckForUpdates(mode: str):
-    global lang
     try:
         logger.info('Trying to get latest version')
         latest = requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name']
@@ -364,7 +373,16 @@ def main():
     root = Tk()
     root.resizable(0,0)
     root.geometry('300x300')
-    LoadConfig()
+    TitleLabel = Label(root, text='', font=('Helvetica', 14, font.BOLD, UNDERLINE)) # text will change when loading a mode
+    TitleLabel.grid(row=0, column=0, columnspan=2, pady=12)
+    LoadConfig(False)
+
+    if os.path.exists(f'{os.getcwd()}\Cryptographer {version}.exe'):
+        os.remove(f'{os.getcwd()}\Cryptographer.exe')
+        os.rename(f'{os.getcwd()}\Cryptographer {version}.exe', 'Cryptographer.exe')
+        subprocess.Popen(f'"{os.getcwd()}/Cryptographer.exe"')
+        root.destroy()
+
     try:
         root.title(f'Cryptographer {version}')
         root.iconbitmap('Cryptographer.exe')
@@ -409,7 +427,7 @@ def main():
     frame3 = LabelFrame(root, text=lang.Main['OutputTitle'])
     frame3.grid(row=2, column=0, padx=10, pady=12, columnspan=2)
 
-    out = Entry(frame3, width=40, state='readonly')
+    out = Entry(frame3, width=50, state='readonly')
     out.grid(row=0, column=0, padx=5, rowspan=2)
     Button(frame3, text=lang.Main['CopyBtn'], command=Copy).grid(row=0, column=1, padx=10)
     Button(frame3, text=lang.Main['DeleteBtn'], command=Delete).grid(row=1, column=1, padx=10, pady=6)

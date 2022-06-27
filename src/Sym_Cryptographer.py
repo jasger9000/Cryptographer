@@ -22,10 +22,10 @@ with open('Cryptographer.log', 'w') as f:
     f.write('')
 
 # streamHandler config
-    streamHandler = logging.StreamHandler()
-    streamHandler.setFormatter(fmt)
-    streamHandler.setLevel(logging.DEBUG)
-    logger.addHandler(streamHandler)
+streamHandler = logging.StreamHandler()
+streamHandler.setFormatter(fmt)
+streamHandler.setLevel(logging.DEBUG)
+logger.addHandler(streamHandler)
 
 
 class fileNotFoundError(FileNotFoundError):
@@ -34,6 +34,13 @@ class KeyNotFoundError(FileNotFoundError):
     pass
 
 
+def BrowseKeyDialog(KeyFrame):
+    global key, img, IndicatorTooltip, Indicator
+    key = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=lang.Dialog['Open'] + lang.Dialog['Key'], filetypes=(fileTypes[6], fileTypes[4]))
+    if key != '':
+        img = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
+        Indicator = Label(KeyFrame, image=img) # LoadIndicator
+        Indicator.grid(row=0, column=1, rowspan=2, padx=5)
         IndicatorTooltip = ToolTip(Indicator, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['Loaded'], delay=1.0) # Tooltip for LoadIndicator
         
 
@@ -49,25 +56,24 @@ def BrowseDecryptDialog(decrypt2Entry: Entry):
     if browseDecryptDialog:
         logger.info('User selected file to Decrypt')
         decrypt2Entry.delete(0,"end")
-        decrypt2Entry.insert(0, browseDecryptDialog)
+        decrypt2Entry.insert(0, browseDecryptDialog) 
 
-def GenerateKey(keyEntry: Entry):
+def GenerateKey():
+    global key
+
     keyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=lang.Dialog['Key'], title=lang.Dialog['Save'] + lang.Dialog['Key'], filetypes=(fileTypes[6], fileTypes[4]))
-
     if keyPath:
         logger.info('User generated key')
-        keyEntry.delete(0,"end")
-        keyEntry.insert(0, keyPath)
         with open(keyPath, 'wb') as f:
             f.write(Fernet.generate_key())
+        key = keyPath
 
-def Cryptography1(mode: str, entry: Entry, keyEntry: Entry):
+def Cryptography1(mode: str, entry: Entry, out: Entry):
     logger.info(f'Cryptography1 initiated in {mode} mode')
-    keyPath = keyEntry.get()
     try:
-        if keyPath and entry.get():
+        if key and entry.get():
             try:
-                with open(keyPath, 'rb') as f:
+                with open(key, 'rb') as f:
                     k = Fernet(f.read())  # Imports the key
                 logger.info('Loaded Key')
             except FileNotFoundError:
@@ -110,10 +116,9 @@ def Cryptography1(mode: str, entry: Entry, keyEntry: Entry):
         out.config(state='readonly')
         logger.info('Cryptography1 finished')
 
-def Cryptography2(mode: str, entry: Entry, keyEntry: Entry):
+def Cryptography2(mode: str, entry: Entry, out: Entry):
     logger.info(f'Cryptography2 initiated in {mode} mode')
     try:
-        keyPath = keyEntry.get()
         filePath = entry.get()
         if key != '' and filePath != '':
             try:
@@ -208,44 +213,46 @@ def Window(EncryptFrame: Frame, DecryptFrame: Frame, KeyFrame, out: Entry, l: st
     # Lang Configuration
     lang = LoadLang(l)
     fileTypes = LoadFileTypes(lang)
-
-
+    
     # Key Input
+    key = ''
     Button(KeyFrame, text=lang.Main['BrowseKeyBtn'], command=lambda: BrowseKeyDialog(KeyFrame)).grid(row=0, column=0, pady=2)
     Button(KeyFrame, text=lang.Main['GenerateKeyBtn'], command=GenerateKey).grid(row=1, column=0, padx=10, pady=6)
+    if key == '':
+        img = ImageTk.PhotoImage(Image.open('UI/NotLoaded.ico').resize((40, 40)))
+    else:
+        img = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
+    Indicator = Label(KeyFrame, image=img) # LoadIndicator
+    Indicator.grid(row=0, column=1, rowspan=2, padx=5)
+    IndicatorTooltip = ToolTip(Indicator, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['NotLoaded'], delay=1.0) # Tooltip for LoadIndicator
+    logger.info('Loaded Key options')
 
-    # Encryption Frame
-    frame1 = LabelFrame(root, text='Encrypt', font=('Arial', 12), padx=10, pady=12)
-    frame1.grid(row=2, column=0, padx=10, pady=10)
 
     # Encrypt option 1
     Label(EncryptFrame, text=lang.Main['Encrypt1Title']).grid(row=0, column=0) # Description Label
-    encrypt1Entry = Entry(frame1, font=('Arial', 14), width=20) # Define Entry
-    encrypt1Entry.grid(row=1, column=0) # Put Entry on screen
+    Encrypt1Entry = Entry(EncryptFrame, width=40) # Define Entry
+    Encrypt1Entry.grid(row=1, column=0, padx=5) # Put Entry on screen
     Button(EncryptFrame, text=lang.Main['Encrypt'], command=lambda: Cryptography1('Encrypt', Encrypt1Entry, out)).grid(row=1, column=1) # Encrypt Btn
 
     # Encrypt option 2
     Label(EncryptFrame, text=lang.Main['Encrypt2Title']).grid(row=2, column=0) # Description Label
-    encrypt2Entry = Entry(frame1, font=('Arial', 14), width=20) # Define Entry
-    encrypt2Entry.grid(row=3, column=0) # Put Entry on screen
+    Encrypt2Entry = Entry(EncryptFrame, width=40) # Define Entry
+    Encrypt2Entry.grid(row=3, column=0, padx=5, pady=5) # Put Entry on screen
     Button(EncryptFrame, text=lang.Main['Encrypt'], command=lambda: Cryptography2('Encrypt', Encrypt2Entry, out)).grid(row=3,column=1) # Encrypt Btn
     Button(EncryptFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseEncryptDialog(Encrypt2Entry)).grid(row=3, column=2, padx=(0,5)) # BrowseCryptographyDialog
     logger.info('loaded encrypt options')
 
-    # Decryption Frame
-    frame2 = LabelFrame(root, text='Decrypt', font=('Arial', 12), padx=10, pady=12)
-    frame2.grid(row=2, column=1, padx=10, pady=10)
 
     # Decrypt option 1
     Label(DecryptFrame, text=lang.Main['Decrypt1Title']).grid(row=0, column=0) # Description Label
-    decrypt1Entry = Entry(frame2, font=('Arial', 14), width=20) # Define Entry
-    decrypt1Entry.grid(row=1, column=0) # Put Entry on screen
-    Button(frame2, text='Decrypt', command=lambda: Cryptography1('Decrypt', decrypt1Entry, KeyEntry)).grid(row=1, column=1) # Decrypt Btn
+    Decrypt1Entry = Entry(DecryptFrame, width=40) # Define Entry
+    Decrypt1Entry.grid(row=1, column=0, padx=5) # Put Entry on screen
+    Button(DecryptFrame, text=lang.Main['Decrypt'], command=lambda: Cryptography1('Decrypt', Decrypt1Entry, out)).grid(row=1, column=1) # Decrypt Btn
 
     # Decrypt option 2
     Label(DecryptFrame, text=lang.Main['Decrypt2Title']).grid(row=2, column=0) # Description Label
-    decrypt2Entry = Entry(frame2, font=('Arial', 14), width=20) # Define Entry
-    decrypt2Entry.grid(row=3, column=0) # Put Entry on screen
+    Decrypt2Entry = Entry(DecryptFrame, width=40) # Define Entry
+    Decrypt2Entry.grid(row=3, column=0, padx=5, pady=5) # Put Entry on screen
     Button(DecryptFrame, text=lang.Main['Decrypt'], command=lambda: Cryptography2('Decrypt', Decrypt2Entry, out)).grid(row=3,column=1) # Decrypt Btn
     Button(DecryptFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseDecryptDialog(Decrypt2Entry)).grid(row=3, column=2, padx=(0,5)) # BrowseDecryptDialog
     logger.info('loaded decrypt options')

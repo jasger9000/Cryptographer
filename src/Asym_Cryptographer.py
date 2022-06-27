@@ -1,7 +1,7 @@
-from tkinter import UNDERLINE, Frame, filedialog, messagebox, Label, Entry, LabelFrame
+from tkinter import UNDERLINE, filedialog, messagebox
 from tktooltip import ToolTip 
 from PIL import ImageTk, Image
-from tkinter.ttk import Button
+from tkinter.ttk import Button, Frame, Label, Entry, LabelFrame
 from cryptography.fernet import Fernet
 import rsa
 import base64
@@ -36,16 +36,31 @@ class PrivKeyNotFoundError(FileNotFoundError):
 class PubKeyNotFoundError(FileNotFoundError):
     pass
 
-def BrowseKeyDialog(keyEntry: Entry, mode: str):
+def BrowseKeyDialog(mode: str, KeyFrame: Frame):
+    global img1, IndicatorTooltip1, Indicator1, Indicator2, IndicatorTooltip2, img2, pubKey, privKey
+
     if mode == 'Private':
         type = 7
     else:
         type = 8
-    browseKeyDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=lang.Dialog['Open'] + lang.Dialog[mode], filetypes=(fileTypes[type], fileTypes[4]))
-    if browseKeyDialog:
-        logger.info(f'User selected {mode} ')
-        keyEntry.delete(0,"end")
-        keyEntry.insert(0, browseKeyDialog)
+    
+    key = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=lang.Dialog['Open'] + lang.Dialog[mode], filetypes=(fileTypes[type], fileTypes[4]))
+    
+    if mode == 'Public':
+        pubKey = key
+        if key != '':
+            img1 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
+            Indicator1 = Label(KeyFrame, image=img1) # LoadIndicator
+            Indicator1.grid(row=1, column=1, padx=5)
+            IndicatorTooltip1 = ToolTip(Indicator1, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['Loaded'], delay=1.0) # Tooltip for LoadIndicator
+    else:
+        privKey = key
+        if key != '':
+            img2 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
+            Indicator2 = Label(KeyFrame, image=img2) # LoadIndicator
+            Indicator2.grid(row=4, column=1, padx=5)
+            IndicatorTooltip2 = ToolTip(Indicator2, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['Loaded'], delay=1.0) # Tooltip for LoadIndicator
+
 
 def BrowseEncryptDialog(encrypt2Entry: Entry):
     browseEncryptDialog = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=lang.Dialog['Open'] + lang.Dialog['file'] + lang.Dialog['to'] + lang.Dialog['Encrypt'], filetypes=(fileTypes[0], fileTypes[1], fileTypes[2], fileTypes[3], fileTypes[4]))
@@ -61,39 +76,44 @@ def BrowseDecryptDialog(decrypt2Entry: Entry):
         decrypt2Entry.delete(0,"end")
         decrypt2Entry.insert(0, browseDecryptDialog) 
 
-def GenerateKeyPair(PublicKeyEntry: Entry, PrivateKeyEntry: Entry):
-    logger.info('Initiated GenerateKeyPair')
-    publicKeyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=os.path.expandvars("$USERNAME's " + lang.Dialog['Public']), title=lang.Dialog['Save'] + lang.Dialog['Public'], filetypes=(fileTypes[8], fileTypes[4]))
-    if publicKeyPath:
-        privateKeyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=lang.Dialog['Private'], title=lang.Dialog['Save'] + lang.Dialog['Private'], filetypes=(fileTypes[7], fileTypes[4]))
-        if privateKeyPath:
+def GenerateKeyPair(KeyFrame: Frame):
+    global img1, IndicatorTooltip1, Indicator1, Indicator2, IndicatorTooltip2, img2, pubKey, privKey
+
+    logger.info('Initiated Keypair generation')
+    pubKey = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=os.path.expandvars("$USERNAME's " + lang.Dialog['Public']), title=lang.Dialog['Save'] + lang.Dialog['Public'], filetypes=(fileTypes[8], fileTypes[4]))
+    if pubKey:
+        privKey = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=lang.Dialog['Private'], title=lang.Dialog['Save'] + lang.Dialog['Private'], filetypes=(fileTypes[7], fileTypes[4]))
+        if privKey:
             Keys = rsa.newkeys(2048)
             Keys += (Fernet.generate_key(), )
-            with open(publicKeyPath, 'wb') as f:
+            with open(pubKey, 'wb') as f:
                 f.write(Keys[0].save_pkcs1('PEM'))
             logger.info('User generated Public key')
-            with open(privateKeyPath, 'wb') as f:
+            with open(privKey, 'wb') as f:
                 f.write(Keys[2] + b'$' + Keys[1].save_pkcs1("PEM")) # Format: symKey$privateKey
-            logger.info('User generated Private key')
-            PublicKeyEntry.delete(0,'end')
-            PrivateKeyEntry.delete(0, 'end')
-
-            PublicKeyEntry.insert(0, privateKeyPath)
-            PrivateKeyEntry.insert(0, publicKeyPath)
-            logger.info('finished GenerateKeyPair')
+            
+            img1 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
+            Indicator1 = Label(KeyFrame, image=img1) # LoadIndicator
+            Indicator1.grid(row=1, column=1, padx=5)
+            IndicatorTooltip1 = ToolTip(Indicator1, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['Loaded'], delay=1.0) # Tooltip for LoadIndicator
+            img2 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
+            Indicator2 = Label(KeyFrame, image=img2) # LoadIndicator
+            Indicator2.grid(row=4, column=1, padx=5)
+            IndicatorTooltip2 = ToolTip(Indicator2, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['Loaded'], delay=1.0) # Tooltip for LoadIndicator
+            logger.info('finished Keypair generation')
         else:
             messagebox.showwarning(title=lang.Messages['AbortedKeyTitle'], message=lang.Messages['AbortedKeyMessage'])
-            logger.info('Exited GenerateKeyPair because User only generated one Key')
+            logger.info('Exited Keypair generation because User only generated one Key')
     else:
-        logger.info('Exited GenerateKeyPair because User generated no Keys')
+        logger.info('Exited Keypair generation because User generated no Keys')
 
 
-def Cryptography1(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntry: Entry):
+def Cryptography1(mode: str, entry: Entry, out: Entry):
     logger.info(f'Cryptography1 initiated in {mode} mode')
     try:
-        if PublicKeyEntry.get() and PrivateKeyEntry.get() and entry.get():
+        if privKey and pubKey and entry.get():
             try:
-                with open(PrivateKeyEntry.get(), 'rb') as f:
+                with open(privKey, 'rb') as f:
                     content = f.read().split(b'$', 1)
                     symKey = content[0]
                     privateKey = content[1]
@@ -106,7 +126,7 @@ def Cryptography1(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
             
             if mode == 'Encrypt':
                 try:
-                    with open(PublicKeyEntry.get(), 'rb') as f:
+                    with open(pubKey, 'rb') as f:
                         publicKey = f.read()
                     logger.info('Loaded Public Key')
                 except FileNotFoundError:
@@ -130,18 +150,15 @@ def Cryptography1(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
         elif entry.get() == '':
             logger.info("Finished Cryptography1 because User didn't enter a message")
             messagebox.showwarning(lang.Messages['NoTextTitle'].split('$')[0] + lang.Dialog[mode] + lang.Messages['NoTextTitle'].split('$')[1],lang.Messages['NoTextMessage'] + lang.Dialog[mode])
-        elif PublicKeyEntry.get() == '':
+        elif pubKey == '':
             logger.info("Finished Cryptography1 because User didn't enter a Public Key")
             messagebox.showwarning(lang.Messages['NoKeyTitle'].split('$')[0] + lang.Dialog[mode] + lang.Messages['NoKeyTitle'].split('$')[1], lang.Messages['NoKeyMessage'].split('$')[0] + lang.Dialog['Public'] + lang.Messages['NoKeyMessage'].split('$')[1] + lang.Dialog[mode])
-        elif PrivateKeyEntry.get() == '':
+        elif privKey == '':
             logger.info("Finished Cryptography1 because User didn't enter a Private Key")
             messagebox.showwarning(lang.Messages['NoKeyTitle'].split('$')[0] + lang.Dialog[mode] + lang.Messages['NoKeyTitle'].split('$')[1], lang.Messages['NoKeyMessage'].split('$')[0] + lang.Dialog['Private'] + lang.Messages['NoKeyMessage'].split('$')[1] + lang.Dialog[mode])
     except rsa.DecryptionError:
         messagebox.showerror(title=lang.Messages['WrongKeyTitle'].split('$')[0] + lang.Dialog['Private'] + lang.Messages['WrongKeyTitle'].split('$')[1], message=lang.Messages['WrongKeyMessage'].split('$')[0] + lang.Dialog['Private'] + lang.Messages['WrongKeyMessage'].split('$')[1])
         logger.exception(f'Decryption failed because of a Decryption Error in {mode} mode')
-    except MemoryError:
-        messagebox.showerror(title=f'{mode}ion failed', message=f"The message couldn't be {mode}ed because it was too big!")
-        logger.info(f'{mode}ion failed, file was too big')
     except PubKeyNotFoundError:
         messagebox.showwarning(title=lang.Messages['KeyNotExistTitle'], message=lang.Messages['KeyNotExistMessage'].split('$')[0] + lang.Dialog['Public'] + lang.Messages['KeyNotExistMessage'].split('$')[1])
         logger.info(f"The Public Key the User tried to Use does Not Exist")
@@ -156,10 +173,10 @@ def Cryptography1(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
         logger.info('Cryptography1 finished')
 
         
-def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntry: Entry):
+def Cryptography2(mode: str, entry: Entry, out: Entry):
     logger.info(f'Cryptography2 initiated in {mode} mode')
     try:
-        if entry.get() and PublicKeyEntry.get() and PrivateKeyEntry.get():
+        if entry.get() and pubKey and privKey:
             filePath = entry.get()
             try:
                 # Checks for user conformation if file is too big
@@ -175,7 +192,7 @@ def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
                 raise fileNotFoundError
             if userConfirm:
                 try:
-                    with open(PrivateKeyEntry.get(), 'rb') as f:
+                    with open(privKey, 'rb') as f:
                         content = f.read().split(b'$', 1)
                         symKey = content[0]
                         privateKey = content[1] 
@@ -193,7 +210,7 @@ def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
                     output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind("/") + 1:len(filePath.replace(extension, ""))]}', title=lang.Dialog['Save'] + lang.Dialog['Encrypted'] + lang.Dialog['file'], filetypes=(fileTypes[5],fileTypes[0],fileTypes[4]))
                     logger.info('got new filePath')
                     try:
-                        with open(PublicKeyEntry.get(), 'rb') as f:
+                        with open(pubKey, 'rb') as f:
                             publicKey = f.read()
                         logger.info('Loaded Public Key')
                     except FileNotFoundError:
@@ -225,10 +242,10 @@ def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
         elif entry.get() == '':
             logger.info("Finished Cryptography2 because User didn't enter a message")
             messagebox.showwarning(lang.Messages['NoTextTitle'].split('$')[0] + lang.Dialog[mode] + lang.Messages['NoTextTitle'].split('$')[1],lang.Messages['NoTextMessage'] + lang.Dialog[mode])
-        elif PublicKeyEntry.get() == '':
+        elif pubKey == '':
             logger.info("Finished Cryptography2 because User didn't enter a Public Key")
             messagebox.showwarning(lang.Messages['NoKeyTitle'].split('$')[0] + lang.Dialog['Public'] + lang.Messages['NoKeyTitle'].split('$')[1], lang.Messages['NoKeyMessage'].split('$')[0] + lang.Dialog['Public'] + lang.Messages['NoKeyMessage'].split('$')[1] + lang.Dialog[mode])
-        elif PrivateKeyEntry.get() == '':
+        elif privKey == '':
             logger.info("Finished Cryptography2 because User didn't enter a Private Key")
             messagebox.showwarning(lang.Messages['NoKeyTitle'].split('$')[0] + lang.Dialog['Private'] + lang.Messages['NoKeyTitle'].split('$')[1], lang.Messages['NoKeyMessage'].split('$')[0] + lang.Dialog['Private'] + lang.Messages['NoKeyMessage'].split('$')[1] + lang.Dialog[mode])
     except ValueError:
@@ -257,64 +274,68 @@ def Cryptography2(mode: str, entry: Entry, PublicKeyEntry: Entry, PrivateKeyEntr
         logger.info('Cryptography2 finished')
     
 
-    global fileTypes, lang
-
+def Window(EncryptFrame: Frame, DecryptFrame: Frame, KeyFrame: LabelFrame, out: Entry, l: str):
+    global fileTypes, lang, privKey, pubKey, Indicator1, IndicatorTooltip1, img1, Indicator2, IndicatorTooltip2, img2
     from Cryptographer import LoadFileTypes, LoadLang
-
+    
     # Lang Configuration
     lang = LoadLang(l)
     fileTypes = LoadFileTypes(lang)
-
+    
     # Public Key Input
+    pubKey = ''
     Label(KeyFrame, text=lang.AsymMain['PublicKeyTitle'], font=('Arial', 12, UNDERLINE)).grid(row=0, column=0, columnspan=2)
-    Button(KeyFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseKeyDialog(publicKeyEntry, 'Public')).grid(row=1, column=0)
-    publicKeyEntry = Entry(KeyFrame, width=25)
-    publicKeyEntry.grid(row=1, column=1)
+    Button(KeyFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseKeyDialog('Public', KeyFrame)).grid(row=1, column=0)
+    if pubKey == '':
+        img1 = ImageTk.PhotoImage(Image.open('UI/NotLoaded.ico').resize((40, 40)))
+    else:
+        img1 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
+    Indicator1 = Label(KeyFrame, image=img1) # LoadIndicator
+    Indicator1.grid(row=1, column=1, padx=5)
+    IndicatorTooltip1 = ToolTip(Indicator1, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['NotLoaded'], delay=1.0) # Tooltip for LoadIndicator
     logger.info('loaded PublicKey input') # Section Loaded
     
-    Button(KeyFrame, text=lang.AsymMain['GenerateKeyBtn'], command=lambda: GenerateKeyPair(PrivateKeyEntry, publicKeyEntry)).grid(row=1, column=2)
+    Button(KeyFrame, text=lang.AsymMain['GenerateKeyBtn'], command=lambda: GenerateKeyPair(KeyFrame)).grid(row=2, column=0, pady=10)
 
     # Private Key Input
-    Label(KeyFrame, text=lang.AsymMain['PrivateKeyTitle'],font=('Arial', 12, UNDERLINE)).grid(row=0, column=3, columnspan=2)
-    PrivateKeyEntry = Entry(frame0, width=25, font=('Arial', 14))
-    PrivateKeyEntry.grid(row=1, column=3)
-    Button(KeyFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseKeyDialog(PrivateKeyEntry, 'Private')).grid(row=1, column=4)
+    privKey = ''
+    Label(KeyFrame, text=lang.AsymMain['PrivateKeyTitle'],font=('Arial', 12, UNDERLINE)).grid(row=3, column=0, columnspan=2)
+    Button(KeyFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseKeyDialog('Private', KeyFrame)).grid(row=4, column=0)
+    if privKey == '':
+        img2 = ImageTk.PhotoImage(Image.open('UI/NotLoaded.ico').resize((40, 40)))
+    else:
+        img2 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
+    Indicator2 = Label(KeyFrame, image=img2) # LoadIndicator
+    Indicator2.grid(row=4, column=1, padx=5)
+    IndicatorTooltip2 = ToolTip(Indicator2, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['NotLoaded'], delay=1.0) # Tooltip for LoadIndicator
     logger.info('loaded PrivateKey input') # Section Loaded
 
 
-    # Encryption Frame
-    frame1 = LabelFrame(root, text='Encrypt', font=('Arial', 12), padx=10, pady=12)
-    frame1.grid(row=2, column=0, padx=10, pady=10)
-
     # Encrypt option 1
     Label(EncryptFrame, text=lang.Main['Encrypt1Title']).grid(row=0, column=0)
-    Encrypt1Entry = Entry(frame1, font=('Arial', 14), width=20)
-    Encrypt1Entry.grid(row=1, column=0)
-    Button(EncryptFrame, text=lang.Main['Encrypt'], command=lambda: Cryptography1('Encrypt', Encrypt1Entry, publicKeyEntry, PrivateKeyEntry, out)).grid(row=1, column=1)
+    Encrypt1Entry = Entry(EncryptFrame, width=40) # Define Entry
+    Encrypt1Entry.grid(row=1, column=0, padx=5) # Put Entry on screen
+    Button(EncryptFrame, text=lang.Main['Encrypt'], command=lambda: Cryptography1('Encrypt', Encrypt1Entry, out)).grid(row=1, column=1)
 
     # Encrypt option 2
     Label(EncryptFrame, text=lang.Main['Encrypt2Title']).grid(row=2, column=0)
-    Encrypt2Entry = Entry(frame1, font=('Arial', 14), width=20)
-    Encrypt2Entry.grid(row=3, column=0)
-    Button(EncryptFrame, text=lang.Main['Encrypt'], command=lambda: Cryptography2('Encrypt', Encrypt2Entry, publicKeyEntry, PrivateKeyEntry, out)).grid(row=3,column=1)
+    Encrypt2Entry = Entry(EncryptFrame, width=40)
+    Encrypt2Entry.grid(row=3, column=0, padx=5)
+    Button(EncryptFrame, text=lang.Main['Encrypt'], command=lambda: Cryptography2('Encrypt', Encrypt2Entry, out)).grid(row=3,column=1)
     Button(EncryptFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseEncryptDialog(Encrypt2Entry)).grid(row=3, column=2) 
     logger.info('loaded encrypt options') # Section Loaded
 
 
-    # Decryption Frame
-    frame2 = LabelFrame(root, text='Decrypt', font=('Arial', 12), padx=10, pady=12)
-    frame2.grid(row=2, column=1, padx=10, pady=10)
-
     # Decrypt option 1
     Label(DecryptFrame, text=lang.Main['Decrypt1Title']).grid(row=0, column=0)
-    Decrypt1Entry = Entry(frame2, font=('Arial', 14), width=20)
-    Decrypt1Entry.grid(row=1, column=0)
-    Button(DecryptFrame, text=lang.Main['Decrypt'], command=lambda: Cryptography1('Decrypt', Decrypt1Entry, publicKeyEntry, PrivateKeyEntry, out)).grid(row=1, column=1)
+    Decrypt1Entry = Entry(DecryptFrame, width=40)
+    Decrypt1Entry.grid(row=1, column=0, padx=5)
+    Button(DecryptFrame, text=lang.Main['Decrypt'], command=lambda: Cryptography1('Decrypt', Decrypt1Entry, out)).grid(row=1, column=1)
 
     # Decrypt option 2
     Label(DecryptFrame, text=lang.Main['Decrypt2Title']).grid(row=2, column=0)
-    Decrypt2Entry = Entry(frame2, font=('Arial', 14), width=20)
-    Decrypt2Entry.grid(row=3, column=0)
-    Button(DecryptFrame, text=lang.Main['Decrypt'], command=lambda: Cryptography2('Decrypt', Decrypt2Entry, publicKeyEntry, PrivateKeyEntry, out)).grid(row=3,column=1)
+    Decrypt2Entry = Entry(DecryptFrame, width=40)
+    Decrypt2Entry.grid(row=3, column=0, padx=5)
+    Button(DecryptFrame, text=lang.Main['Decrypt'], command=lambda: Cryptography2('Decrypt', Decrypt2Entry, out)).grid(row=3,column=1)
     Button(DecryptFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseDecryptDialog(Decrypt2Entry)).grid(row=3, column=2)
     logger.info('loaded decrypt options') # Section Loaded
