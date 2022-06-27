@@ -163,11 +163,11 @@ def OpenSettings():
     langBox.grid(row=1, column=1, pady=5)
     Button(SettingsFrame, text=lang.SettingsLabels['AddLangBtn'], command=InstallNewLanguage).grid(row=1, column=2, pady=5)
 
-    # Save key?
-    Label(SettingsFrame, text=lang.SettingsLabels['RememberKeyLabel']).grid(row=2, column=0, pady=5)
-    saveKey = IntVar()
-    saveKey.set(config['Settings']['SaveLastKey'])
-    Checkbutton(SettingsFrame, variable=saveKey, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'SaveLastKey', str(saveKey.get()))).grid(row=2, column=1, pady=5)
+    # # Save key?
+    # Label(SettingsFrame, text=lang.SettingsLabels['RememberKeyLabel']).grid(row=2, column=0, pady=5)
+    # saveKey = IntVar()
+    # saveKey.set(config['Settings']['SaveLastKey'])
+    # Checkbutton(SettingsFrame, variable=saveKey, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'SaveLastKey', str(saveKey.get()))).grid(row=2, column=1, pady=5)
 
     # Automatic CFU?
     Label(SettingsFrame, text=lang.SettingsLabels['AutoCFULabel']).grid(row=3, column=0, pady=5, padx=(0, 20))
