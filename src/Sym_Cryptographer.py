@@ -228,16 +228,8 @@ def Delete():
 def main(root: Tk, version: str):
     global out
 
-    # GUI Configuration
-    root.title(f'Symmetric Cryptographer ver. {version}')
-    root.geometry('')
-    TitleLabel = Label(root, text='Symmetric Cryptographer', font=('Helvetica', 14, font.BOLD, UNDERLINE))
-    TitleLabel.grid(row=0, column=0, columnspan=2)
-    logger.info('loaded Tk Config')
+    fileTypes = LoadFileTypes(lang)
 
-    # Key Frame
-    frame0 = LabelFrame(root, text='En-/Decryption Key:', font=('Arial', 12, UNDERLINE), padx=120, pady=12)
-    frame0.grid(row=1, column=0, padx=10, columnspan=2)
 
     # Key Input
     Button(frame0, text='Generate Key', command=lambda: GenerateKey(KeyEntry)).grid(row=0, column=0)

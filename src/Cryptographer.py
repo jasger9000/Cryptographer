@@ -35,7 +35,18 @@ streamHandler.setFormatter(fmt)
 streamHandler.setLevel(logging.DEBUG)
 logger.addHandler(streamHandler)
 
-version = '0.6.0'
+def LoadFileTypes(lang):
+    return (
+    (lang.fileTypes['Text'], ('*.txt', '*.doc', '*.docx', '*.log', '*.msg', '*.odt', '*.pages', '*.rtf', '*.tex', '*.wpd', '*.wps')),                   # 0
+    (lang.fileTypes['Video'], ('*.mp4', '*.mov', '*.avi', '*.flv', '*.mkv', '*.wmv', '*.avchd', '*.webm', '*MPEG-4', '*.H.264')),                       # 1
+    (lang.fileTypes['Audio'], ('*.aif', '*.aiff', '*.iff', '*.m3u', '*.m4a', '*.mp3', '*.mpa', '*.wav', '*.wma', '*.aup3', '*.aup', '*.ogg', '*.mp2')), # 2
+    (lang.fileTypes['Picture'], ('*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp', '*.raw', '*.tiff', '*.psd', '*.cr2')),                                   # 3
+    (lang.fileTypes['All'], '*.*'),                                                                                                                     # 4
+    (lang.fileTypes['Encrypted'], '*.Encrypted'),                                                                                                       # 5
+    (lang.fileTypes['Key'], '*.key'),                                                                                                                   # 6
+    (lang.fileTypes['PrivateKey'], '*.priv_key'),                                                                                                       # 7
+    (lang.fileTypes['PublicKey'], '*.pub_key'),                                                                                                         # 8
+    )
 
 def OpenSettings():
     global langBox

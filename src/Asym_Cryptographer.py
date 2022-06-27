@@ -279,16 +279,7 @@ def Delete():
 def main(root: Tk, version: str):
     global out
 
-    # GUI Configuration
-    root.title(f'Asymmetric Cryptographer ver. {version}')
-    root.geometry('')
-    TitleLabel = Label(root, text='Asymmetric Cryptographer', font=('Helvetica', 14, font.BOLD, UNDERLINE))
-    TitleLabel.grid(row=0, column=0, columnspan=2)
-    logger.info('loaded Tk Config')
-    
-    # Keys Frame
-    frame0 = LabelFrame(root, text='Keys', font=('Arial', 12), padx=10, pady=6)
-    frame0.grid(row=1, column=0, padx=10, columnspan=2)
+    fileTypes = LoadFileTypes(lang)
 
     # Public Key Input
     Label(frame0, text='Public Key:', font=('Arial', 12, UNDERLINE)).grid(row=0, column=0, columnspan=2)
