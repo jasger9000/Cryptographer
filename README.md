@@ -41,6 +41,9 @@ It's super easy just generate a key and encrypt/decrypt your files or messages, 
 
 #### Suggestions & Bug report
   - Suggest new features or file bug reports to improve Lively, [learn more..](https://github.com/jasger9000/Cryptographer/issues)
+ 
+### Localization
+  - If you feel like you want to create a new Language pack please feel free to do so, you can just open a new pull request for the Language you made
 
 #### Spread the word
   - Star this repository or tell your friend.. any help is welcome :)
@@ -50,4 +53,7 @@ It's super easy just generate a key and encrypt/decrypt your files or messages, 
 
 ## Icon
 <a href="https://www.flaticon.com/free-icons/shield" title="shield icons">Icon created by Those Icons - Flaticon</a>
+
+## UI Elements
+<a href="https://www.flaticon.com/free-icons/cross" title="cross icons">Indicator icons created by kliwir art - Flaticon</a>
 
