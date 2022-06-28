@@ -214,17 +214,22 @@ def Window(EncryptFrame: Frame, DecryptFrame: Frame, KeyFrame, out: Entry, l: st
     lang = LoadLang(l)
     fileTypes = LoadFileTypes(lang)
     
+
+    img1 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
+    img2 = ImageTk.PhotoImage(Image.open('UI/NotLoaded.ico').resize((40, 40)))
+
     # Key Input
+    if config['State']['keyfile'] != 'None':
+        key = config['State']['keyfile']
+        Indicator = Label(KeyFrame, image=img1) # LoadIndicator 
+        IndicatorTooltip = ToolTip(Indicator, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['Loaded'], delay=1.0) # Tooltip for LoadIndicator
+    else:
     key = ''
+        Indicator = Label(KeyFrame, image=img2) # LoadIndicator
+        IndicatorTooltip = ToolTip(Indicator, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['NotLoaded'], delay=1.0) # Tooltip for LoadIndicator
+    Indicator.grid(row=0, column=1, rowspan=2, padx=5)
     Button(KeyFrame, text=lang.Main['BrowseKeyBtn'], command=lambda: BrowseKeyDialog(KeyFrame)).grid(row=0, column=0, pady=2)
     Button(KeyFrame, text=lang.Main['GenerateKeyBtn'], command=GenerateKey).grid(row=1, column=0, padx=10, pady=6)
-    if key == '':
-        img = ImageTk.PhotoImage(Image.open('UI/NotLoaded.ico').resize((40, 40)))
-    else:
-        img = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
-    Indicator = Label(KeyFrame, image=img) # LoadIndicator
-    Indicator.grid(row=0, column=1, rowspan=2, padx=5)
-    IndicatorTooltip = ToolTip(Indicator, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['NotLoaded'], delay=1.0) # Tooltip for LoadIndicator
     logger.info('Loaded Key options')
 
 

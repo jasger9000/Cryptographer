@@ -77,7 +77,7 @@ def BrowseDecryptDialog(decrypt2Entry: Entry):
         decrypt2Entry.insert(0, browseDecryptDialog) 
 
 def GenerateKeyPair(KeyFrame: Frame):
-    global img1, IndicatorTooltip1, Indicator1, Indicator2, IndicatorTooltip2, img2, pubKey, privKey
+    global IndicatorTooltip1, Indicator1, Indicator2, IndicatorTooltip2, pubKey, privKey
 
     logger.info('Initiated Keypair generation')
     pubKey = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=os.path.expandvars("$USERNAME's " + lang.Dialog['Public']), title=lang.Dialog['Save'] + lang.Dialog['Public'], filetypes=(fileTypes[8], fileTypes[4]))
@@ -92,12 +92,11 @@ def GenerateKeyPair(KeyFrame: Frame):
             with open(privKey, 'wb') as f:
                 f.write(Keys[2] + b'$' + Keys[1].save_pkcs1("PEM")) # Format: symKey$privateKey
             
-            img1 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
             Indicator1 = Label(KeyFrame, image=img1) # LoadIndicator
             Indicator1.grid(row=1, column=1, padx=5)
             IndicatorTooltip1 = ToolTip(Indicator1, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['Loaded'], delay=1.0) # Tooltip for LoadIndicator
-            img2 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
-            Indicator2 = Label(KeyFrame, image=img2) # LoadIndicator
+            
+            Indicator2 = Label(KeyFrame, image=img1) # LoadIndicator
             Indicator2.grid(row=4, column=1, padx=5)
             IndicatorTooltip2 = ToolTip(Indicator2, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['Loaded'], delay=1.0) # Tooltip for LoadIndicator
             logger.info('finished Keypair generation')
@@ -282,31 +281,32 @@ def Window(EncryptFrame: Frame, DecryptFrame: Frame, KeyFrame: LabelFrame, out: 
     lang = LoadLang(l)
     fileTypes = LoadFileTypes(lang)
     
+    img1 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
+    img2 = ImageTk.PhotoImage(Image.open('UI/NotLoaded.ico').resize((40, 40)))
+
     # Public Key Input
     pubKey = ''
     Label(KeyFrame, text=lang.AsymMain['PublicKeyTitle'], font=('Arial', 12, UNDERLINE)).grid(row=0, column=0, columnspan=2)
     Button(KeyFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseKeyDialog('Public', KeyFrame)).grid(row=1, column=0)
     if pubKey == '':
-        img1 = ImageTk.PhotoImage(Image.open('UI/NotLoaded.ico').resize((40, 40)))
+        Indicator1 = Label(KeyFrame, image=img2) # LoadIndicator
     else:
-        img1 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
-    Indicator1 = Label(KeyFrame, image=img1) # LoadIndicator
+        Indicator1 = Label(KeyFrame, image=img1) # LoadIndicator
     Indicator1.grid(row=1, column=1, padx=5)
     IndicatorTooltip1 = ToolTip(Indicator1, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['NotLoaded'], delay=1.0) # Tooltip for LoadIndicator
     logger.info('loaded PublicKey input') # Section Loaded
     
-    Button(KeyFrame, text=lang.AsymMain['GenerateKeyBtn'], command=lambda: GenerateKeyPair(KeyFrame)).grid(row=2, column=0, pady=10)
+    Button(KeyFrame, text=lang.AsymMain['GenerateKeyBtn'], command=lambda: GenerateKeyPair(KeyFrame)).grid(row=2, column=0, pady=5, padx=(5,0))
 
     # Private Key Input
     privKey = ''
     Label(KeyFrame, text=lang.AsymMain['PrivateKeyTitle'],font=('Arial', 12, UNDERLINE)).grid(row=3, column=0, columnspan=2)
     Button(KeyFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseKeyDialog('Private', KeyFrame)).grid(row=4, column=0)
     if privKey == '':
-        img2 = ImageTk.PhotoImage(Image.open('UI/NotLoaded.ico').resize((40, 40)))
+        Indicator2 = Label(KeyFrame, image=img2) # LoadIndicator
     else:
-        img2 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
-    Indicator2 = Label(KeyFrame, image=img2) # LoadIndicator
-    Indicator2.grid(row=4, column=1, padx=5)
+        Indicator2 = Label(KeyFrame, image=img1) # LoadIndicator
+    Indicator2.grid(row=4, column=1, padx=5, pady=5)
     IndicatorTooltip2 = ToolTip(Indicator2, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['NotLoaded'], delay=1.0) # Tooltip for LoadIndicator
     logger.info('loaded PrivateKey input') # Section Loaded
 
@@ -322,7 +322,7 @@ def Window(EncryptFrame: Frame, DecryptFrame: Frame, KeyFrame: LabelFrame, out: 
     Encrypt2Entry = Entry(EncryptFrame, width=40)
     Encrypt2Entry.grid(row=3, column=0, padx=5)
     Button(EncryptFrame, text=lang.Main['Encrypt'], command=lambda: Cryptography2('Encrypt', Encrypt2Entry, out)).grid(row=3,column=1)
-    Button(EncryptFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseEncryptDialog(Encrypt2Entry)).grid(row=3, column=2) 
+    Button(EncryptFrame, text=lang.Main['BrowseBtn'], command=lambda: BrowseEncryptDialog(Encrypt2Entry)).grid(row=3, column=2, padx=(0,5), pady=5) 
     logger.info('loaded encrypt options') # Section Loaded
 
 
