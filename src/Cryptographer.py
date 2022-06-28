@@ -163,10 +163,7 @@ def OpenSettings():
 
     # Language Setting
     Label(SettingsFrame, text=lang.SettingsLabels['LangLabel']).grid(row=1, column=0, pady=5)
-    langList = []
-    for entry in os.scandir(f'{os.getcwd()}/Languages'):
-        if entry.is_file() and entry.name.rsplit('.')[1] == 'py':
-            langList.append(entry.name.rsplit('.')[0])
+    langList = [entry.name.rstrip('.py') for entry in os.scandir(f'{os.getcwd()}/Languages') if entry.is_file() and Path(entry.name).suffix == '.py']
     langBox = Combobox(SettingsFrame, values=langList, state='readonly')
     langBox.set(lang.Language)
     langBox.bind('<<ComboboxSelected>>', LoadLang)
@@ -211,10 +208,8 @@ def OpenSettings():
 
 
 def InstallNewLanguage():
-    global langUrl
 
     # Window Config
-    langUrl = None
     InstallWindow = Toplevel(Settings)
     InstallWindow.title(lang.CryptMain['SettingsLangLabel'])
     InstallWindow.resizable(0,0)
@@ -229,18 +224,12 @@ def InstallNewLanguage():
     frame.grid(row=1, column=0, padx=10, pady=12)
 
     # Gets List of installed Languages
-    langList = []
-    for entry in os.scandir(f'{os.getcwd()}/Languages'):
-        if entry.is_file() and entry.name.rsplit('.')[1] == 'py':
-            langList.append(entry.name.rsplit('.')[0])
+    langList = [entry.name.rstrip('.py') for entry in os.scandir(f'{os.getcwd()}/Languages') if entry.is_file() and Path(entry.name).suffix == '.py']
     
     # Requests the Languages from Github
-    gitLangs = []
-    for item in requests.get('https://api.github.com/repos/jasger9000/Cryptographer/git/trees/master').json()['tree']:
-        if item['path'] == 'Languages':
-            for item in requests.get(f'https://api.github.com/repos/jasger9000/Cryptographer/git/trees/{item["sha"]}').json()['tree']:
-                if Path(item['path']).suffix == '.py':
-                    gitLangs.append(item['path'].rstrip('.py'))
+    for i in requests.get('https://api.github.com/repos/jasger9000/Cryptographer/git/trees/master').json()['tree']:
+        if i['path'] == 'Languages':
+            gitLangs = [item['path'].rstrip('.py') for item in requests.get(f'https://api.github.com/repos/jasger9000/Cryptographer/git/trees/{i["sha"]}').json()['tree'] if Path(item['path']).suffix == '.py']
     
     # Creates List of installable Languages
     newLangs = []
@@ -249,7 +238,7 @@ def InstallNewLanguage():
             newLangs.append(item)
 
     langBox = Combobox(frame, values=newLangs, state='readonly')
-    InstallBtn = Button(frame, text=lang.SettingsLabels['AddLangBtn'], command=lambda: [request.urlretrieve(f'https://raw.githubusercontent.com/jasger9000/Cryptographer/master/Languages/{langBox.get()}.py', f'Languages/{langBox.get()}.py'), langUrl is None])
+    InstallBtn = Button(frame, text=lang.SettingsLabels['AddLangBtn'], command=lambda: [request.urlretrieve(f'https://raw.githubusercontent.com/jasger9000/Cryptographer/master/Languages/{langBox.get()}.py', f'Languages/{langBox.get()}.py')])
     InstallBtn.grid(row=1, column=1)
     if len(newLangs) == 0:
         langBox.set(lang.Messages['NoNewLang'])
@@ -404,7 +393,6 @@ def main():
     if not lang:
         return
         
-
     try:
         root.title(f'Cryptographer {version}')
         root.iconbitmap('Cryptographer.exe')
@@ -419,6 +407,15 @@ def main():
             InstallNewUpdate(requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
         else:
             return
+
+    for i in ['Loaded.ico', 'NotLoaded.ico']:
+        if not os.path.exists('UI/' + i):
+            logger.error('UI files not found')
+            userConfirm = messagebox.askokcancel('UI Elements not found')
+            if userConfirm:
+                InstallNewUpdate(requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
+            else:
+                return
 
     if os.path.exists(f'{os.getcwd()}\Cryptographer {version}.exe'):
         try:
