@@ -4,6 +4,8 @@ import Asym_Cryptographer
 import Sym_Cryptographer
 from tkinter import HORIZONTAL, UNDERLINE, IntVar, Toplevel, font, messagebox, Tk, Menu, TclError
 from ttkbootstrap import Button, Combobox, Notebook, Progressbar, Entry, Radiobutton, Checkbutton, Label, Frame, LabelFrame, Style
+import Asym_Cryptographer
+import Sym_Cryptographer
 import logging
 import requests
 from packaging.version import parse
@@ -38,6 +40,7 @@ streamHandler.setLevel(logging.DEBUG)
 logger.addHandler(streamHandler)
 
 version = 'v0.7.0'
+stagedConfig = {}
 
 def LoadFileTypes(lang):
     return (
@@ -67,13 +70,13 @@ def LoadLang(l: str):
             logger.error('Language Module not found, continuing with English')
             try:
                 messagebox.showerror("Language not found", "Couldn't find the Language you are trying to use, please reinstall the Language pack")
-                UpdateConfig('Settings', 'Language', 'English')
+                UpdateConfig('Settings', 'Language', 'English', True)
                 lang = importlib.import_module('English')
             except ModuleNotFoundError:
                 logger.exception('English Language pack not installed')
                 messagebox.showerror('English not found', 'Cryptographer tried to fallback to English but failed because English is not installed.\nPlease reinstall the English Language pack.')
                 return None
-        except NameError: # Triggers when config is not defined e.g. when lang is imported in sym or Asym
+        except NameError: # will trigger on startup not important
             pass
         return lang
     else:
@@ -131,12 +134,21 @@ def LoadConfig(Force: bool):
             logger.info('Config loaded')
     return config
 
-def UpdateConfig(Section: str, Option: str, Value: str):
-    if ApplyBtn:
+def UpdateConfig(Section: str, Option: str, Value: str, Apply=False):
+    global stagedConfig
+
+    try:
         ApplyBtn['state'] = 'normal'
+    except NameError:
+        pass
+
+    if Apply == True:
     config.set(Section, Option, Value)
     with open('config.ini', 'w') as f:
             config.write(f)
+    else:
+        stagedConfig[Section] = [Option, Value]
+
 
 def OpenSettings():
     global langBox, ApplyBtn, Settings, langList
@@ -178,15 +190,13 @@ def OpenSettings():
 
     # Automatic CFU?
     Label(SettingsFrame, text=lang.SettingsLabels['AutoCFULabel']).grid(row=3, column=0, pady=5, padx=(0, 20))
-    autoCFU = IntVar()
-    autoCFU.set(config['Settings']['CFUatStartup'])
+    autoCFU = IntVar(value=config['Settings']['CFUatStartup'])
     Checkbutton(SettingsFrame, variable=autoCFU, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'CFUatStartup', str(autoCFU.get()))).grid(row=3, column=1, pady=5)
 
     # Light/Dark/Windows mode
     Label(SettingsFrame, text=lang.SettingsLabels['Themes'], font=('Helvetica', 8, font.BOLD, UNDERLINE)).grid(row=4, column=0, pady=(12, 2))
 
-    theme = IntVar()
-    theme.set(config['Settings']['theme'])
+    theme = IntVar(value=config['Settings']['theme'])
     Label(SettingsFrame, text=lang.SettingsLabels['LightTheme']).grid(row=5, pady=5)
     Radiobutton(SettingsFrame, variable=theme, value=1, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=5, column=1, pady=5)
 
@@ -200,11 +210,22 @@ def OpenSettings():
     # Default and Apply Button
     DefaultBtn = Button(frame, text=lang.SettingsLabels['DefaultBtn'], command=lambda: [LoadConfig(True), root.destroy(), os.startfile(f'{os.getcwd()}/Cryptographer.exe')])
     DefaultBtn.grid(row=0, pady=5)
-    ApplyBtn = Button(frame, state='disabled',text=lang.SettingsLabels['ApplyBtn'], command=lambda: [root.destroy(), os.startfile(f'{os.getcwd()}/Cryptographer.exe')])
+    ApplyBtn = Button(frame, state='disabled',text=lang.SettingsLabels['ApplyBtn'], command=ApplyChanges)
     ApplyBtn.grid(row=0, column=1, pady=5)
     
     root.wait_window()
     logger.info('Finished loading')
+
+def ApplyChanges():
+    root.destroy()
+
+    for section in stagedConfig:
+        option, value = stagedConfig.get(section)
+        print(section, option, value)
+        config.set(section, option, value)
+    with open('config.ini', 'w') as f:
+        config.write(f)
+    os.startfile(f'{os.getcwd()}/Cryptographer.exe')
 
 
 def InstallNewLanguage():
@@ -270,13 +291,13 @@ def SwitchMode(mode: str):
             KeyFrame.config(text=lang.Main['KeyTitle'])
             root.title(f'{lang.Main["title"]} {version}')
             TitleLabel.config(text=lang.Main["title"])
-            UpdateConfig('State', 'Mode', 'Symmetric')
+            UpdateConfig('State', 'Mode', 'Symmetric', True)
         elif mode == 'Asymmetric':
             Asym_Cryptographer.Window(EncryptFrame, DecryptFrame, KeyFrame, out, lang.Language)
             KeyFrame.config(text=lang.AsymMain['KeysTitle'])
             root.title(f'{lang.AsymMain["title"]} {version}')
             TitleLabel.config(text=lang.AsymMain["title"])
-            UpdateConfig('State', 'Mode', 'Asymmetric')
+            UpdateConfig('State', 'Mode', 'Asymmetric', True)
         logger.info('Loading complete')
 
 def LoadFrames():
