@@ -30,7 +30,7 @@ It's super easy just generate a key and encrypt/decrypt your files or messages, 
 
 ## Download
 
-[Version: v0.6.0 (Windows 10)](https://github.com/jasger9000/Cryptographer/releases/download/v0.6.0/Cryptographer.zip)
+[Version: v0.7.0 (Windows 10)](https://github.com/jasger9000/Cryptographer/releases/download/v0.7.0/Cryptographer.zip)
 
 
 ## Support
