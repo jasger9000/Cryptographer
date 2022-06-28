@@ -404,7 +404,6 @@ def main():
     if not lang:
         return
         
-
     try:
         root.title(f'Cryptographer {version}')
         root.iconbitmap('Cryptographer.exe')
@@ -419,6 +418,15 @@ def main():
             InstallNewUpdate(requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
         else:
             return
+
+    for i in ['Loaded.ico', 'NotLoaded.ico']:
+        if not os.path.exists('UI/' + i):
+            logger.error('UI files not found')
+            userConfirm = messagebox.askokcancel('UI Elements not found')
+            if userConfirm:
+                InstallNewUpdate(requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
+            else:
+                return
 
     if os.path.exists(f'{os.getcwd()}\Cryptographer {version}.exe'):
         try:
