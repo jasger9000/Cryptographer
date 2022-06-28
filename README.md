@@ -1,39 +1,46 @@
-
-<p align="center">
-  <h2 align="center">Cryptographer</h2>
-</p>
-
 [![GitHub release](https://img.shields.io/github/release/jasger9000/Cryptographer/all.svg)](https://github.com/jasger9000/Cryptographer/releases)
 [![Github all releases](https://img.shields.io/github/downloads/jasger9000/Cryptographer/total.svg)](https://github.com/jasger9000/Cryptographer/releases)
 [![GitHub stars](https://img.shields.io/github/stars/jasger9000/Cryptographer.svg)](https://github.com/jasger9000/Cryptographer/stargazers)
 [![Issues](https://img.shields.io/github/issues/jasger9000/Cryptographer.svg)](https://github.com/jasger9000/Cryptographer/issues)
 
-## Contents
-- [About](#about)
-- [Features](#features)
-- [Download](#download)
-- [Support](#support)
-- [License](#license)
+# Cryptographer
 
-## About
-The Cryptographer is the only Cryptography application you will ever need.
+## A Cryptography tool used to encrypt and decrypt files written in python
 
-It's super easy just generate a key and encrypt/decrypt your files or messages, and that in Asyymetric and Symmetric Encryption
+This project is a tool used to encrypt and decrypt files and messages using symmetric (meaning one key encryption/decryption) and asymmetric (meaning two key encryption/decryption) to protect your privacy.
+The project is fully written in python and very user friendly. You can easily encrypt and decrypt whole files of any type such as video, picture and audio files.
 
+ * Encrypt and decrypt **files** and **messages**
+ * Switch between Asymmetric Encryption(Encryption with a Public and Private Key)
+ * As well as Symmetric Encryption(Encryption with a single Key)
+ * Convenient and easy to understand Interface
 
-## Features
- - Asymmetric Encryption(Encryption with a Public and Private Key)
- - Symmetric Encryption(Encryption with one single Key)
- - Convenient and easy to understand layout
- - The possibility to just encrypt Files & Messages
+## Preview
+
+### Symmetric mode
+<img src='https://github.com/jasger9000/Cryptographer/blob/master/src/Preview_Symmetric.png'>
+
+### Asymmetric mode
+<img src='https://github.com/jasger9000/Cryptographer/blob/master/src/Preview_Asymmetric.png'>
+
 
 
 ## Download
 
-[Version: v0.7.0 (Zip)](https://github.com/jasger9000/Cryptographer/releases/download/v0.7.0/Cryptographer.zip)
 
-[Version: v0.7.0(Installer)](https://github.com/jasger9000/Cryptographer/releases/download/v0.7.0/Cryptographer.Installer.exe)
-   - Will show Windows SmartScreen Warning
+### Method one: Zip file
+1. Download the [Zip file](https://github.com/jasger9000/Cryptographer/releases/download/v0.7.0/Cryptographer.zip)
+2. Extract the files to the directory you want
+3. Finished - you just need to run the program
+
+### Method two: Installer
+1. Download the [Installer](https://github.com/jasger9000/Cryptographer/releases/download/v0.7.0/Cryptographer.Installer.exe)
+2. Double click the installer
+   - Keep in mind, that you will need to have Administrator rights
+   - You may encounter a Windows Smart Screen warning, this is due to the fact, that this software has not signature on it
+3. Follow the instructions of the installer
+4. Finished - you just need to run the program
+
 
 
 ## Support
@@ -42,8 +49,11 @@ It's super easy just generate a key and encrypt/decrypt your files or messages, 
 #### Programmer
   - Code contributions are welcome always welcome, you can just open a [pull request](https://www.github.com/jasger9000/Cryptographer/pulls) if you want. [Learn more about Pull requests](https://docs.github.com/en/enterprise-server@3.5/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests)
 
-#### Suggestions & Bug report
-  - Suggest new features or file bug reports to improve Lively, [learn more..](https://github.com/jasger9000/Cryptographer/issues)
+
+#### Suggestions & Bug reports
+  - If you found a bug you can open an [issue](https://github.com/jasger9000/Cryptographer/issues), there you can describe the problem you are having
+  - Feature requests are always welcome these can also be uploaded on the [issue tab](https://github.com/jasger9000/Cryptographer/issues)
+
  
 ### Localization
   - If you feel like you want to create a new Language pack please feel free to do so, you can just open a new pull request for the Language you made
@@ -52,7 +62,7 @@ It's super easy just generate a key and encrypt/decrypt your files or messages, 
   - Star this repository or tell your friend.. any help is welcome :)
 
 ## License
-  - The Cryprographer Software is licensed under [GPL-v3.](https://github.com/rocksdanister/lively/blob/core-separation/LICENSE)
+  - The Cryprographer Software is licensed under [GPL-v3.](https://github.com/jasger9000/Cryptographer/blob/master/LICENSE)
 
 ## Icon
 <a href="https://www.flaticon.com/free-icons/shield" title="shield icons">Icon created by Those Icons - Flaticon</a>
