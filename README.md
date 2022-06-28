@@ -27,6 +27,7 @@ The project is fully written in python and very user friendly. You can easily en
 
 ## Download
 
+
 ### Method one: Zip file
 1. Download the [Zip file](https://github.com/jasger9000/Cryptographer/releases/download/v0.7.0/Cryptographer.zip)
 2. Extract the files to the directory you want
@@ -41,15 +42,18 @@ The project is fully written in python and very user friendly. You can easily en
 4. Finished - you just need to run the program
 
 
+
 ## Support
   - Do you want to help out? here are some options..
 
 #### Programmer
   - Code contributions are welcome always welcome, you can just open a [pull request](https://www.github.com/jasger9000/Cryptographer/pulls) if you want. [Learn more about Pull requests](https://docs.github.com/en/enterprise-server@3.5/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests)
 
+
 #### Suggestions & Bug reports
   - If you found a bug you can open an [issue](https://github.com/jasger9000/Cryptographer/issues), there you can describe the problem you are having
   - Feature requests are always welcome these can also be uploaded on the [issue tab](https://github.com/jasger9000/Cryptographer/issues)
+
  
 ### Localization
   - If you feel like you want to create a new Language pack please feel free to do so, you can just open a new pull request for the Language you made
