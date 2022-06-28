@@ -391,10 +391,13 @@ def main():
     LoadConfig(False)
 
     if os.path.exists(f'{os.getcwd()}\Cryptographer {version}.exe'):
-        os.remove(f'{os.getcwd()}\Cryptographer.exe')
+        try:
+            os.remove(f'{os.getcwd()}\Cryptographer.exe')
+        except FileNotFoundError:
+            pass
         os.rename(f'{os.getcwd()}\Cryptographer {version}.exe', 'Cryptographer.exe')
         subprocess.Popen(f'"{os.getcwd()}/Cryptographer.exe"')
-        root.destroy()
+        quit()
 
     try:
         root.title(f'Cryptographer {version}')
