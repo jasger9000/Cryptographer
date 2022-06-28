@@ -54,28 +54,28 @@ def LoadFileTypes(lang):
 
 def LoadLang(l: str):
     if os.path.exists('Languages'):
-    if type(l) is not str:
-        l = langBox.get()
-    try:
-        lang = importlib.import_module(l)
-        if lang.version < 1:
-            logger.critical('Language pack too old')
-            messagebox.showerror('Language pack too old', 'The Language pack you are using is too old, please install a newer version')
+        if type(l) is not str:
+            l = langBox.get()
+        try:
+            lang = importlib.import_module(l)
+            if lang.version < 1:
+                logger.critical('Language pack too old')
+                messagebox.showerror('Language pack too old', 'The Language pack you are using is too old, please install a newer version')
                 return None
-        UpdateConfig('Settings', 'Language', l)
-    except ModuleNotFoundError:
-        logger.error('Language Module not found, continuing with English')
+            UpdateConfig('Settings', 'Language', l)
+        except ModuleNotFoundError:
+            logger.error('Language Module not found, continuing with English')
             try:
-        messagebox.showerror("Language not found", "Couldn't find the Language you are trying to use, please reinstall the Language pack")
-        UpdateConfig('Settings', 'Language', 'English')
-        lang = importlib.import_module('English')
+                messagebox.showerror("Language not found", "Couldn't find the Language you are trying to use, please reinstall the Language pack")
+                UpdateConfig('Settings', 'Language', 'English')
+                lang = importlib.import_module('English')
             except ModuleNotFoundError:
                 logger.exception('English Language pack not installed')
                 messagebox.showerror('English not found', 'Cryptographer tried to fallback to English but failed because English is not installed.\nPlease reinstall the English Language pack.')
                 return None
-    except NameError: # Triggers when config is not defined e.g. when lang is imported in sym or Asym
-        pass
-    return lang
+        except NameError: # Triggers when config is not defined e.g. when lang is imported in sym or Asym
+            pass
+        return lang
     else:
         logger.critical('Language folder not found')
         messagebox.showerror("Couldn't find Language folder", 
@@ -201,9 +201,9 @@ def OpenSettings():
 
     
     # Default and Apply Button
-    DefaultBtn = Button(frame, text=lang.SettingsLabels['DefaultBtn'], command=lambda: [LoadConfig(True), root.destroy(), os.startfile(__file__)])
+    DefaultBtn = Button(frame, text=lang.SettingsLabels['DefaultBtn'], command=lambda: [LoadConfig(True), root.destroy(), os.startfile(f'{os.getcwd()}/Cryptographer.exe')])
     DefaultBtn.grid(row=0, pady=5)
-    ApplyBtn = Button(frame, state='disabled',text=lang.SettingsLabels['ApplyBtn'], command=lambda: [root.destroy(), os.startfile(__file__)])
+    ApplyBtn = Button(frame, state='disabled',text=lang.SettingsLabels['ApplyBtn'], command=lambda: [root.destroy(), os.startfile(f'{os.getcwd()}/Cryptographer.exe')])
     ApplyBtn.grid(row=0, column=1, pady=5)
     
     root.wait_window()
@@ -352,6 +352,8 @@ def InstallNewUpdate(latest: str):
     logger.info('Update downloaded')
 
     ProgressLabel.config(text=lang.CryptMain['InstallUpdateProgress1'])
+    os.system('rmdir UI /S /Q')
+    os.remove('Languages/English.py')
     with zipfile.ZipFile(file, 'r') as zip_ref:
         zip_ref.extractall(os.getcwd())
     InstallBar['value'] += 66
@@ -401,12 +403,7 @@ def main():
     LoadConfig(False)
     if not lang:
         return
-
-    if os.path.exists(f'{os.getcwd()}\Cryptographer {version}.exe'):
-        os.remove(f'{os.getcwd()}\Cryptographer.exe')
-        os.rename(f'{os.getcwd()}\Cryptographer {version}.exe', 'Cryptographer.exe')
-        subprocess.Popen(f'"{os.getcwd()}/Cryptographer.exe"')
-        root.destroy()
+        
 
     try:
         root.title(f'Cryptographer {version}')
@@ -421,7 +418,17 @@ def main():
         if userConfirm:
             InstallNewUpdate(requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
         else:
-            root.destroy()
+            return
+
+    if os.path.exists(f'{os.getcwd()}\Cryptographer {version}.exe'):
+        try:
+            os.remove(f'{os.getcwd()}\Cryptographer.exe')
+        except FileNotFoundError:
+            pass
+        os.rename(f'{os.getcwd()}\Cryptographer {version}.exe', 'Cryptographer.exe')
+        subprocess.Popen(f'"{os.getcwd()}/Cryptographer.exe"')
+        return
+
 
     menubar = Menu(root)
     ModeMenu = Menu(menubar, tearoff=0)
