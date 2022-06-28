@@ -17,12 +17,12 @@ The project is fully written in python and very user friendly. You can easily en
 
 ## Preview
 
-# Symmetric mode
-<img href=''>
+### Symmetric mode
+<img src='https://github.com/jasger9000/Cryptographer/blob/master/src/Preview_Symmetric.png'>
 
 ### Asymmetric mode
-<img href='https://github.com/jasger9000/Cryptographer/blob/master/src/Preview_Asymmetric.png'>
-<img href='https://github.com/jasger9000/Cryptographer/blob/master/src/Preview_Symmetric.png'>
+<img src='https://github.com/jasger9000/Cryptographer/blob/master/src/Preview_Asymmetric.png'>
+
 
 
 ## Download
