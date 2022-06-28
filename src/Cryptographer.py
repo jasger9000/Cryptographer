@@ -53,6 +53,7 @@ def LoadFileTypes(lang):
     )
 
 def LoadLang(l: str):
+    if os.path.exists('Languages'):
     if type(l) is not str:
         l = langBox.get()
     try:
@@ -60,17 +61,26 @@ def LoadLang(l: str):
         if lang.version < 1:
             logger.critical('Language pack too old')
             messagebox.showerror('Language pack too old', 'The Language pack you are using is too old, please install a newer version')
-            return
+                return None
         UpdateConfig('Settings', 'Language', l)
     except ModuleNotFoundError:
         logger.error('Language Module not found, continuing with English')
+            try:
         messagebox.showerror("Language not found", "Couldn't find the Language you are trying to use, please reinstall the Language pack")
         UpdateConfig('Settings', 'Language', 'English')
         lang = importlib.import_module('English')
-        logger.exception('Language Module not found, continuing with English')
+            except ModuleNotFoundError:
+                logger.exception('English Language pack not installed')
+                messagebox.showerror('English not found', 'Cryptographer tried to fallback to English but failed because English is not installed.\nPlease reinstall the English Language pack.')
+                return None
     except NameError: # Triggers when config is not defined e.g. when lang is imported in sym or Asym
         pass
     return lang
+    else:
+        logger.critical('Language folder not found')
+        messagebox.showerror("Couldn't find Language folder", 
+        "Cryptographer did not find the Language folder.\nPlease reinstall the Language folder from Github, or if you think this is a bug,\n\please open a issue on Github.\nGithub: https://www.github.com/jasger9000/Cryptographer")
+        return None
 
 
 def LoadConfig(Force: bool):
@@ -389,6 +399,8 @@ def main():
     TitleLabel = Label(root, text='', font=('Helvetica', 14, font.BOLD, UNDERLINE)) # text will change when loading a mode
     TitleLabel.grid(row=0, column=0, columnspan=2, pady=12)
     LoadConfig(False)
+    if not lang:
+        return
 
     if os.path.exists(f'{os.getcwd()}\Cryptographer {version}.exe'):
         os.remove(f'{os.getcwd()}\Cryptographer.exe')
