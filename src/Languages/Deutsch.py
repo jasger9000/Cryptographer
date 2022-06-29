@@ -60,8 +60,9 @@ Messages = {
 SettingsLabels = {
     'General': 'Allgemein',
     'AddLangBtn': 'Neu Sprache hinzufügen',
-    'LangLabel': 'Sprache    ',
-    'RememberKeyLabel': 'Schlüssel Merken     ',
+    'LangLabel': 'Sprache',
+    'RememberKeyLabel': 'Schlüssel Merken',
+    'RememberKeyTip': 'Wenn diese Option aktiviert ist,\nwird der zuletzt verwendete Schlüssel gespeichert\nund bei jedem Start der Software geladen.',
     'AutoCFULabel': 'Beim Start auf Updates prüfen?',
 
     'Themes': 'Designs',

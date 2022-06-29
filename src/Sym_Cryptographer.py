@@ -35,12 +35,14 @@ class KeyNotFoundError(FileNotFoundError):
 
 
 def BrowseKeyDialog(KeyFrame):
-    global key, img, IndicatorTooltip, Indicator
+    global key, IndicatorTooltip
     key = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=lang.Dialog['Open'] + lang.Dialog['Key'], filetypes=(fileTypes[6], fileTypes[4]))
-    if key != '':
-        img = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
-        Indicator = Label(KeyFrame, image=img) # LoadIndicator
-        Indicator.grid(row=0, column=1, rowspan=2, padx=5)
+    if key:
+        if int(config['Settings']['savelastkey']) == 1:
+            config.set('State', 'keyfile', key)
+            with open('config.ini', 'w') as f:
+                config.write(f)
+        Indicator.config(image=img1)
         IndicatorTooltip = ToolTip(Indicator, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['Loaded'], delay=1.0) # Tooltip for LoadIndicator
         
 
@@ -59,14 +61,20 @@ def BrowseDecryptDialog(decrypt2Entry: Entry):
         decrypt2Entry.insert(0, browseDecryptDialog) 
 
 def GenerateKey():
-    global key
+    global key, IndicatorTooltip
 
-    keyPath = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=lang.Dialog['Key'], title=lang.Dialog['Save'] + lang.Dialog['Key'], filetypes=(fileTypes[6], fileTypes[4]))
-    if keyPath:
+    key = filedialog.asksaveasfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), defaultextension='.*', initialfile=lang.Dialog['Key'], title=lang.Dialog['Save'] + lang.Dialog['Key'], filetypes=(fileTypes[6], fileTypes[4]))
+    if key:
         logger.info('User generated key')
-        with open(keyPath, 'wb') as f:
+        with open(key, 'wb') as f:
             f.write(Fernet.generate_key())
-        key = keyPath
+        if int(config['Settings']['savelastkey']) == 1:
+            config.set('State', 'keyfile', key)
+            with open('config.ini', 'w') as f:
+                config.write(f)
+        Indicator.config(image=img1)
+        IndicatorTooltip = ToolTip(Indicator, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['Loaded'], delay=1.0) # Tooltip for LoadIndicator
+        
 
 def Cryptography1(mode: str, entry: Entry, out: Entry):
     logger.info(f'Cryptography1 initiated in {mode} mode')
@@ -206,14 +214,14 @@ def Cryptography2(mode: str, entry: Entry, out: Entry):
 
 
 
-def Window(EncryptFrame: Frame, DecryptFrame: Frame, KeyFrame, out: Entry, l: str):
-    global fileTypes, img, lang, key, IndicatorTooltip, Indicator
-    from Cryptographer import LoadLang, LoadFileTypes
+def Window(EncryptFrame: Frame, DecryptFrame: Frame, KeyFrame, out: Entry):
+    global fileTypes, img1, img2, lang, key, IndicatorTooltip, Indicator, config
+    from Cryptographer import LoadConfig, LoadFileTypes
 
     # Lang Configuration
-    lang = LoadLang(l)
+    config, lang = LoadConfig()
     fileTypes = LoadFileTypes(lang)
-    
+
 
     img1 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
     img2 = ImageTk.PhotoImage(Image.open('UI/NotLoaded.ico').resize((40, 40)))
@@ -224,7 +232,7 @@ def Window(EncryptFrame: Frame, DecryptFrame: Frame, KeyFrame, out: Entry, l: st
         Indicator = Label(KeyFrame, image=img1) # LoadIndicator 
         IndicatorTooltip = ToolTip(Indicator, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['Loaded'], delay=1.0) # Tooltip for LoadIndicator
     else:
-    key = ''
+        key = ''
         Indicator = Label(KeyFrame, image=img2) # LoadIndicator
         IndicatorTooltip = ToolTip(Indicator, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['NotLoaded'], delay=1.0) # Tooltip for LoadIndicator
     Indicator.grid(row=0, column=1, rowspan=2, padx=5)

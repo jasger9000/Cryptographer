@@ -1,7 +1,6 @@
 import importlib
 from pathlib import Path
-import Asym_Cryptographer
-import Sym_Cryptographer
+from tktooltip import ToolTip
 from tkinter import HORIZONTAL, UNDERLINE, IntVar, Toplevel, font, messagebox, Tk, Menu, TclError
 from ttkbootstrap import Button, Combobox, Notebook, Progressbar, Entry, Radiobutton, Checkbutton, Label, Frame, LabelFrame, Style
 import Asym_Cryptographer
@@ -86,8 +85,7 @@ def LoadLang(l: str):
         return None
 
 
-def LoadConfig(Force: bool):
-    global config, lang
+def LoadConfig(Force: bool = False):
     config = ConfigParser()
 
     logger.info('Searching for config')
@@ -95,7 +93,7 @@ def LoadConfig(Force: bool):
         logger.warning('Config not found, generating new')
         config.add_section('Settings')
         config.set('Settings', 'Language', 'English')
-        config.set('Settings', 'SaveLastKey', '3')
+        config.set('Settings', 'SaveLastKey', '0')
         config.set('Settings', 'Password', 'False')
         config.set('Settings', 'CFUatStartup', '1')
         config.set('Settings', 'Theme', '1')
@@ -132,22 +130,31 @@ def LoadConfig(Force: bool):
                 Style('darkly')
                 logger.info('Using Dark theme')
             logger.info('Config loaded')
-    return config
+    return config, lang
 
-def UpdateConfig(Section: str, Option: str, Value: str, Apply=False):
+def UpdateConfig(Section: str, Option: str | list, Value: str, Apply=False):
     global stagedConfig
 
     try:
         ApplyBtn['state'] = 'normal'
     except NameError:
         pass
-
-    if Apply == True:
-    config.set(Section, Option, Value)
-    with open('config.ini', 'w') as f:
-            config.write(f)
+    
+    if type(Option) is list:
+        if Apply == True:
+            for i in Option:
+                config.set(Section, i, Value)
+                with open('config.ini', 'w') as f:
+                    config.write(f)
+        else:
+            [stagedConfig.update({i: [Section, Value]}) for i in Option if i]
     else:
-        stagedConfig[Section] = [Option, Value]
+        if Apply == True:
+            config.set(Section, Option, Value)
+            with open('config.ini', 'w') as f:
+                config.write(f)
+        else:
+            stagedConfig.update({Option: [Section, Value]})
 
 
 def OpenSettings():
@@ -182,11 +189,12 @@ def OpenSettings():
     langBox.grid(row=1, column=1, pady=5)
     Button(SettingsFrame, text=lang.SettingsLabels['AddLangBtn'], command=InstallNewLanguage).grid(row=1, column=2, pady=5)
 
-    # # Save key?
-    # Label(SettingsFrame, text=lang.SettingsLabels['RememberKeyLabel']).grid(row=2, column=0, pady=5)
-    # saveKey = IntVar()
-    # saveKey.set(config['Settings']['SaveLastKey'])
-    # Checkbutton(SettingsFrame, variable=saveKey, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'SaveLastKey', str(saveKey.get()))).grid(row=2, column=1, pady=5)
+    # Save key?
+    SaveLabel = Label(SettingsFrame, text=lang.SettingsLabels['RememberKeyLabel'])
+    SaveLabel.grid(row=2, column=0, pady=5)
+    ToolTip(SaveLabel, msg=lang.SettingsLabels['RememberKeyTip'])
+    saveKey = IntVar(value=config.getint('Settings', 'savelastkey'))
+    Checkbutton(SettingsFrame, variable=saveKey, onvalue=1, offvalue=0, command=lambda: [UpdateConfig('Settings', 'SaveLastKey', str(saveKey.get())), UpdateConfig('State', ['keyfile', 'publickeyfile', 'privatekeyfile'], 'None')]).grid(row=2, column=1, pady=5)
 
     # Automatic CFU?
     Label(SettingsFrame, text=lang.SettingsLabels['AutoCFULabel']).grid(row=3, column=0, pady=5, padx=(0, 20))
@@ -219,9 +227,8 @@ def OpenSettings():
 def ApplyChanges():
     root.destroy()
 
-    for section in stagedConfig:
-        option, value = stagedConfig.get(section)
-        print(section, option, value)
+    for option in stagedConfig:
+        section, value = stagedConfig.get(option)
         config.set(section, option, value)
     with open('config.ini', 'w') as f:
         config.write(f)
@@ -287,7 +294,7 @@ def SwitchMode(mode: str):
         root.geometry('')
 
         if mode == 'Symmetric':      
-            Sym_Cryptographer.Window(EncryptFrame, DecryptFrame, KeyFrame, out, lang.Language)
+            Sym_Cryptographer.Window(EncryptFrame, DecryptFrame, KeyFrame, out)
             KeyFrame.config(text=lang.Main['KeyTitle'])
             root.title(f'{lang.Main["title"]} {version}')
             TitleLabel.config(text=lang.Main["title"])
@@ -407,8 +414,7 @@ def Delete():
 
 
 def main():
-    global root, ApplyBtn, TitleLabel, out
-    ApplyBtn = None
+    global root, TitleLabel, out, lang, config
 
     # Tk Config
     root = Tk()
@@ -416,7 +422,7 @@ def main():
     root.geometry('300x300')
     TitleLabel = Label(root, text='', font=('Helvetica', 14, font.BOLD, UNDERLINE)) # text will change when loading a mode
     TitleLabel.grid(row=0, column=0, columnspan=2, pady=12)
-    LoadConfig(False)
+    config, lang = LoadConfig()
     if not lang:
         return
         

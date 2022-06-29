@@ -60,8 +60,9 @@ Messages = {
 SettingsLabels = {
     'General': 'General',
     'AddLangBtn': 'Add new Language',
-    'LangLabel': 'Language    ',
-    'RememberKeyLabel': 'Remember key    ',
+    'LangLabel': 'Language',
+    'RememberKeyLabel': 'Remember key',
+    'RememberKeyTip': 'If this option is enabled,\nthe last used key will be saved and loaded\neach time the software is started.',
     'AutoCFULabel': 'Check for Updates at startup?',
 
     'Themes': 'Themes',
