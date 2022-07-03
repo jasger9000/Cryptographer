@@ -278,6 +278,11 @@ def InstallNewLanguage():
 
     newLangBox.grid(row=1, column=0)
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
 def SwitchMode(mode: str):
     if TitleLabel.cget('text') == '' or config['State']['Mode'] != mode:
         logger.info('Switching Mode')
@@ -438,15 +443,6 @@ def main():
             InstallNewUpdate(requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
         else:
             return
-
-    for i in ['Loaded.ico', 'NotLoaded.ico']:
-        if not os.path.exists('UI/' + i):
-            logger.error('UI files not found')
-            userConfirm = messagebox.askokcancel('UI Elements not found')
-            if userConfirm:
-                InstallNewUpdate(requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
-            else:
-                return
 
     if os.path.exists(f'{os.getcwd()}\Cryptographer {version}.exe'):
         try:

@@ -284,14 +284,14 @@ def Cryptography2(mode: str, entry: Entry, out: Entry):
 
 def Window(EncryptFrame: Frame, DecryptFrame: Frame, KeyFrame: LabelFrame, out: Entry, l: str):
     global fileTypes, lang, privKey, pubKey, Indicator1, IndicatorTooltip1, img1, Indicator2, IndicatorTooltip2, img2, config
-    from Cryptographer import LoadFileTypes, LoadConfig
+    from Cryptographer import LoadFileTypes, LoadConfig, resource_path
     
     # Lang Configuration
     config, lang = LoadConfig()
     fileTypes = LoadFileTypes(lang)
     
-    img1 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
-    img2 = ImageTk.PhotoImage(Image.open('UI/NotLoaded.ico').resize((40, 40)))
+    img1 = ImageTk.PhotoImage(Image.open(resource_path('UI/Loaded.ico')).resize((40, 40)))
+    img2 = ImageTk.PhotoImage(Image.open(resource_path('UI/NotLoaded.ico')).resize((40, 40)))
 
     # Public Key Input
     if config['State']['publickeyfile'] != 'None':

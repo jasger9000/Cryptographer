@@ -214,15 +214,15 @@ def Cryptography2(mode: str, entry: Entry, out: Entry):
 
 def Window(EncryptFrame: Frame, DecryptFrame: Frame, KeyFrame, out: Entry):
     global fileTypes, img1, img2, lang, key, IndicatorTooltip, Indicator, config
-    from Cryptographer import LoadConfig, LoadFileTypes
+    from Cryptographer import LoadConfig, LoadFileTypes, resource_path
 
     # Lang Configuration
     config, lang = LoadConfig()
     fileTypes = LoadFileTypes(lang)
 
 
-    img1 = ImageTk.PhotoImage(Image.open('UI/Loaded.ico').resize((40, 40)))
-    img2 = ImageTk.PhotoImage(Image.open('UI/NotLoaded.ico').resize((40, 40)))
+    img1 = ImageTk.PhotoImage(Image.open(resource_path('UI/Loaded.ico')).resize((40, 40)))
+    img2 = ImageTk.PhotoImage(Image.open(resource_path('UI/NotLoaded.ico')).resize((40, 40)))
 
     # Key Input
     if config['State']['keyfile'] != 'None':
