@@ -162,6 +162,7 @@ def OpenSettings():
     # Window Config
     Settings = Toplevel(root)
     Settings.title(lang.CryptMain['HelpSettingsLabel'])
+    Settings.iconbitmap(resource_path('UI/Settings.ico'))
     Settings.resizable(0,0)
     Settings.focus()
     Settings.transient(root)
@@ -239,6 +240,7 @@ def InstallNewLanguage():
     # Window Config
     InstallWindow = Toplevel(Settings)
     InstallWindow.title(lang.CryptMain['SettingsLangLabel'])
+    InstallWindow.iconbitmap(resource_path('UI/download.ico'))
     InstallWindow.resizable(0,0)
     InstallWindow.focus()
     InstallWindow.transient(Settings)
@@ -356,6 +358,7 @@ def CheckForUpdates(mode: str):
 
 def InstallNewUpdate(latest: str):
     InstallWindow = Toplevel(root, padx=10)
+    InstallWindow.iconbitmap(resource_path('UI/download.ico'))
     InstallWindow.resizable(0,0)
     InstallWindow.focus()
     InstallWindow.transient(root)
