@@ -1,18 +1,16 @@
 import importlib
-from pathlib import Path
 from tktooltip import ToolTip
 from tkinter import HORIZONTAL, UNDERLINE, IntVar, Toplevel, font, messagebox, Tk, Menu, TclError
 from ttkbootstrap import Button, Combobox, Notebook, Progressbar, Entry, Radiobutton, Checkbutton, Label, Frame, LabelFrame, Style
-import Asym_Cryptographer
-import Sym_Cryptographer
+from Sym_Cryptographer import Window as SymWindow
+from Asym_Cryptographer import Window as AsymWindow
 import logging
 import requests
 from packaging.version import parse
-import webbrowser
 from urllib import request
 import os
 import zipfile
-import subprocess
+from subprocess import Popen
 from configparser import ConfigParser
 import threading
 import sys
@@ -182,7 +180,7 @@ def OpenSettings():
 
     # Language Setting
     Label(SettingsFrame, text=lang.SettingsLabels['LangLabel']).grid(row=1, column=0, pady=5)
-    langList = [entry.name.rstrip('.py') for entry in os.scandir(f'{os.getcwd()}/Languages') if entry.is_file() and Path(entry.name).suffix == '.py']
+    langList = [entry.name.rstrip('.py') for entry in os.scandir(f'{os.getcwd()}/Languages') if entry.is_file() and os.path.splitext(entry.name) == '.py']
     langBox = Combobox(SettingsFrame, values=langList, state='readonly')
     langBox.set(lang.Language)
     langBox.bind('<<ComboboxSelected>>', LoadLang)
@@ -221,8 +219,8 @@ def OpenSettings():
     ApplyBtn = Button(frame, state='disabled',text=lang.SettingsLabels['ApplyBtn'], command=ApplyChanges)
     ApplyBtn.grid(row=0, column=1, pady=5)
     
-    root.wait_window()
     logger.info('Finished loading')
+    root.wait_window()
 
 def ApplyChanges():
     root.destroy()
@@ -256,7 +254,7 @@ def InstallNewLanguage():
     # Requests the Languages from Github
     for i in requests.get('https://api.github.com/repos/jasger9000/Cryptographer/git/trees/master').json()['tree']:
         if i['path'] == 'Languages':
-            gitLangs = [item['path'].rstrip('.py') for item in requests.get(f'https://api.github.com/repos/jasger9000/Cryptographer/git/trees/{i["sha"]}').json()['tree'] if Path(item['path']).suffix == '.py']
+            gitLangs = [item['path'].rstrip('.py') for item in requests.get(f'https://api.github.com/repos/jasger9000/Cryptographer/git/trees/{i["sha"]}').json()['tree'] if os.path.splitext(item['path']) == '.py']
     
     newLangs = [i for i in gitLangs if i not in langList] # Creates List of installable Languages
 
@@ -294,13 +292,13 @@ def SwitchMode(mode: str):
         root.geometry('')
 
         if mode == 'Symmetric':      
-            Sym_Cryptographer.Window(EncryptFrame, DecryptFrame, KeyFrame, out)
+            SymWindow(EncryptFrame, DecryptFrame, KeyFrame, out)
             KeyFrame.config(text=lang.Main['KeyTitle'])
             root.title(f'{lang.Main["title"]} {version}')
             TitleLabel.config(text=lang.Main["title"])
             UpdateConfig('State', 'Mode', 'Symmetric', True)
         elif mode == 'Asymmetric':
-            Asym_Cryptographer.Window(EncryptFrame, DecryptFrame, KeyFrame, out, lang.Language)
+            AsymWindow(EncryptFrame, DecryptFrame, KeyFrame, out, lang.Language)
             KeyFrame.config(text=lang.AsymMain['KeysTitle'])
             root.title(f'{lang.AsymMain["title"]} {version}')
             TitleLabel.config(text=lang.AsymMain["title"])
@@ -338,7 +336,7 @@ def CheckForUpdates(mode: str):
         else:
             logger.info('No new version found')
             newUpdate = False
-    except Exception:
+    except ConnectionError:
         logger.warning("Couldn't connect to server")
         newUpdate = latest = None
 
@@ -361,7 +359,7 @@ def InstallNewUpdate(latest: str):
     Label(InstallWindow, text=lang.CryptMain['InstallUpdateTitle']).grid(row=0, column=0, pady=6, padx=10)
     InstallBar = Progressbar(InstallWindow, orient=HORIZONTAL, length=200, mode='determinate')
     InstallBar.grid(row=1, column=0, ipady=8.499999999999999115)
-    FinishBtn = Button(InstallWindow, text='Finish', command=lambda: [logger.info('Finished installing, restarting now'), subprocess.Popen(f'"{os.getcwd()}/Cryptographer {latest}.exe"'), root.destroy()], state='disabled')
+    FinishBtn = Button(InstallWindow, text='Finish', command=lambda: [logger.info('Finished installing, restarting now'), Popen(f'"{os.getcwd()}/Cryptographer {latest}.exe"'), root.destroy()], state='disabled')
     FinishBtn.grid(row=1, column=1)
     ProgressLabel = Label(InstallWindow, text='')
     ProgressLabel.grid(row=2, column=0, pady=10)
@@ -456,7 +454,7 @@ def main():
         except FileNotFoundError:
             pass
         os.rename(f'{os.getcwd()}\Cryptographer {version}.exe', 'Cryptographer.exe')
-        subprocess.Popen(f'"{os.getcwd()}/Cryptographer.exe"')
+        Popen(f'"{os.getcwd()}/Cryptographer.exe"')
         return
 
 
@@ -474,8 +472,8 @@ def main():
     
     # Help Menu
     HelpMenu = Menu(menubar, tearoff=0)
-    HelpMenu.add_command(label=lang.CryptMain['HelpGithubLabel'], command=lambda: webbrowser.open('https://github.com/jasger9000/Cryptographer'))
-    HelpMenu.add_command(label=lang.CryptMain['HelpFilesLabel'], command=lambda: subprocess.Popen(f'explorer "{os.getcwd()}"'))
+    HelpMenu.add_command(label=lang.CryptMain['HelpGithubLabel'], command=lambda: Popen('explorer "https://github.com/jasger9000/Cryptographer"'))
+    HelpMenu.add_command(label=lang.CryptMain['HelpFilesLabel'], command=lambda: Popen(f'explorer "{os.getcwd()}"'))
     HelpMenu.add_separator()
     HelpMenu.add_command(label=lang.CryptMain['HelpSettingsLabel'], command=OpenSettings)
     HelpMenu.add_separator()

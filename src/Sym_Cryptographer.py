@@ -4,7 +4,6 @@ from tktooltip import ToolTip
 from PIL import ImageTk, Image
 from tkinter.ttk import Button, Entry, Frame, Label
 from cryptography.fernet import Fernet, InvalidToken
-from pathlib import Path
 import logging
 import os
 
@@ -156,7 +155,7 @@ def Cryptography2(mode: str, entry: Entry, out: Entry):
 
                 if mode == 'Encrypt':
                     
-                    extension = Path(filePath).suffix
+                    extension = os.path.splitext(filePath)
                     output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind("/") + 1:len(filePath.replace(extension, ""))]}', title=lang.Dialog['Save'] + lang.Dialog['Encrypted'] + lang.Dialog['file'], filetypes=(fileTypes[5], fileTypes[0], fileTypes[4]))
                     logger.info('got new filePath')
                     contents = base64.b64encode(extension.encode()) + b'$' + base64.b64encode(k.encrypt(contents)) # Format: extension$contents
@@ -171,7 +170,7 @@ def Cryptography2(mode: str, entry: Entry, out: Entry):
                     contents[1] = k.decrypt(contents[1]).decode()
                     logger.info('Decrypted Contents')
 
-                    output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind("/") + 1:len(filePath.replace(Path(filePath).suffix, ''))], title=lang.Dialog['Save'] + lang.Dialog['Decrypted'] + lang.Dialog['file'], filetypes=((lang.Dialog['Decrypted'] + lang.Dialog['file'], f'*{base64.b64decode(contents[0]).decode()}' ), fileTypes[4]))
+                    output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind("/") + 1:len(filePath.replace(os.path.splitext(filePath), ''))], title=lang.Dialog['Save'] + lang.Dialog['Decrypted'] + lang.Dialog['file'], filetypes=((lang.Dialog['Decrypted'] + lang.Dialog['file'], f'*{base64.b64decode(contents[0]).decode()}' ), fileTypes[4]))
                     logger.info('Got New filePath')
                     with open(output, 'w') as f:
                             f.write(contents[1])
@@ -211,7 +210,6 @@ def Cryptography2(mode: str, entry: Entry, out: Entry):
     finally:
         out.config(state='readonly')
         logger.info('Cryptography2 finished')
-
 
 
 def Window(EncryptFrame: Frame, DecryptFrame: Frame, KeyFrame, out: Entry):

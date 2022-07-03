@@ -6,7 +6,6 @@ from cryptography.fernet import Fernet
 import rsa
 import base64
 import logging
-import pathlib
 import os
 
 # logger config
@@ -215,7 +214,7 @@ def Cryptography2(mode: str, entry: Entry, out: Entry):
                 logger.info('Loaded File Contents')
                 
                 if mode == 'Encrypt':
-                    extension = pathlib.Path(filePath).suffix
+                    extension = os.path(filePath)
                     output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind("/") + 1:len(filePath.replace(extension, ""))]}', title=lang.Dialog['Save'] + lang.Dialog['Encrypted'] + lang.Dialog['file'], filetypes=(fileTypes[5],fileTypes[0],fileTypes[4]))
                     logger.info('got new filePath')
                     try:
@@ -238,7 +237,7 @@ def Cryptography2(mode: str, entry: Entry, out: Entry):
                     contents[2] = symKey.decrypt(base64.b64decode(contents[2])).decode()
                     logger.info('Decrypted Contents')
 
-                    output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind("/") + 1:len(filePath.replace(pathlib.Path(filePath).suffix, ''))], title=lang.Dialog['Save'] + lang.Dialog['Decrypted'] + lang.Dialog['file'], filetypes=((lang.Dialog['Decrypted'] + lang.Dialog['file'],f'*{base64.b64decode(contents[0]).decode()}' ),fileTypes[4]))
+                    output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind("/") + 1:len(filePath.replace(os.path(filePath), ''))], title=lang.Dialog['Save'] + lang.Dialog['Decrypted'] + lang.Dialog['file'], filetypes=((lang.Dialog['Decrypted'] + lang.Dialog['file'],f'*{base64.b64decode(contents[0]).decode()}' ),fileTypes[4]))
                     logger.info('Got New filePath')
                     with open(output, 'w') as f:
                         f.write(contents[2])
