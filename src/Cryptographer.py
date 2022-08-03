@@ -67,7 +67,6 @@ def LoadLang(l: str):
             logger.error('Language Module not found, continuing with English')
             try:
                 messagebox.showerror("Language not found", "Couldn't find the Language you are trying to use, please reinstall the Language pack")
-                UpdateConfig('Settings', 'Language', 'English', True)
                 lang = importlib.import_module('English')
             except ModuleNotFoundError:
                 logger.exception('English Language pack not installed')
@@ -254,16 +253,19 @@ def InstallNewLanguage():
 
 
     # Requests the Languages from Github
-    for i in requests.get('https://api.github.com/repos/jasger9000/Cryptographer/git/trees/master').json()['tree']:
-        if i['path'] == 'Languages':
-            gitLangs = [item['path'].rstrip('.py') for item in requests.get(f'https://api.github.com/repos/jasger9000/Cryptographer/git/trees/{i["sha"]}').json()['tree'] if os.path.splitext(item['path']) == '.py']
-    
+    try:
+        for i in requests.get('https://api.github.com/repos/jasger9000/Cryptographer/git/trees/master').json()['tree']:
+            if i['path'] == 'Languages':
+                gitLangs = [item['path'].rstrip('.py') for item in requests.get(f'https://api.github.com/repos/jasger9000/Cryptographer/git/trees/{i["sha"]}').json()['tree'] if os.path.splitext(item['path'])[1] == '.py']
+    except requests.ConnectionError:
+        logger.warning("Couldn't connect to server")
+        gitLangs = ''
+        
     newLangs = [i for i in gitLangs if i not in langList] # Creates List of installable Languages
 
     newLangBox = Combobox(frame, values=newLangs, state='readonly')
     InstallBtn = Button(frame, text=lang.SettingsLabels['AddLangBtn'], command=lambda: [
-        request.urlretrieve(f'https://raw.githubusercontent.com/jasger9000/Cryptographer/master/Languages/{newLangBox.get()}.py', 
-        f'Languages/{newLangBox.get()}.py'), 
+        request.urlretrieve(f'https://raw.githubusercontent.com/jasger9000/Cryptographer/master/Languages/{newLangBox.get()}.py', f'Languages/{newLangBox.get()}.py'), 
         newLangs.remove(newLangBox.get()),
         langList.append(newLangBox.get()),
         newLangBox.config(values=newLangs),
@@ -274,7 +276,10 @@ def InstallNewLanguage():
         ])
 
     InstallBtn.grid(row=1, column=1)
-    if len(newLangs) == 0:
+    if len(gitLangs) == 0:
+        newLangBox.set(lang.Messages['ConnectErrLang'])
+        InstallBtn['state'] = 'disabled'
+    elif len(newLangs) == 0:
         newLangBox.set(lang.Messages['NoNewLang'])
         InstallBtn['state'] = 'disabled'
 
