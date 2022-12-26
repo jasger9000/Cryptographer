@@ -13,6 +13,7 @@ import zipfile
 from subprocess import Popen
 from configparser import ConfigParser
 import threading
+import json
 import updater
 import sys
 
@@ -208,41 +209,59 @@ def LoadFrames():
     TabRegister.add(EncryptFrame, text=lang.Dialog['Encrypt'])
     TabRegister.add(DecryptFrame, text=lang.Dialog['Decrypt'])
 
-    # Keyframe
-    KeyFrame = LabelFrame(root, text='')
-    KeyFrame.grid(row=1, column=1, padx=10)
+def LoadLang(l):
+    """Loads a Language pack if it is installed and asks the user to reinstall the English one if the users and the English one is missing.
+    Returns the language pack if it is installed otherwise returns None"""
+    if os.path.exists('Languages'):
+        logger.info('Loading Language')
 
-def CheckForUpdates(mode: str):
+        if os.path.exists(f'Languages/{l}.json'): # Checks if Language pack exists and loads it if it does
+            with open(f'Languages/{l}.json', 'r') as f:
+                lang = json.load(f)
+            logger.info('Loaded ' + l + ' Language pack')
+        elif os.path.exists('Languages/English.json'): # Checks if English Language pack is installed to try to fallback
+            logger.error('Language not found, continuing with English')
+            messagebox.showerror("Language not found", "Couldn't find the Language you are trying to use, please reinstall the Language pack")
+            with open('Languages/English.json', 'r') as f:
+                lang = json.load(f)
+            UpdateConfig('Settings', 'Language', "English")
+        else: # Asks the user to reinstall the English Language pack
+            logger.exception('English Language pack not installed')
+            messagebox.showerror('English not found', 'Cryptographer tried to fallback to English but failed because English is not installed.\nPlease reinstall the English Language pack.')
+            if messagebox.askyesno('Reinstall English', 'Reinstall English Language pack?'):
+                try:
+                    logger.info('Trying to reinstall English')
+                    request.urlretrieve('https://raw.githubusercontent.com/jasger9000/Cryptographer/master/Languages/English.json', 'Languages/English.json')
+                    UpdateConfig('Settings', 'Language', "English")
+                except error.URLError:
+                    logger.error('Connection to server could not be established')
+                    messagebox.showerror("Couldn't reinstall English", "Couldn't reinstall English because connection to GitHub couldn't be Established.\nPlease try again later or check if you are Connected to the Internet.")
+                    return None
+            else:
+                logger.info('User did not try to reinstall the English language pack, exiting application')
+                return None
+        return lang
+    else:
+        logger.error('Language folder not found, creating new')
+        os.mkdir('Languages')
+        LoadLang(None)
+
+def getTranslation(groupKey: str, itemKey: str):
+    """Gets a translation for a given key from the language pack"""
+    global lang
+
     try:
-        logger.info('Trying to get latest version')
-        latest = requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name']
-        logger.info('Got latest version')
-        if parse(latest) > parse(version):
-            logger.info('Newer Version found')
-            newUpdate = True
-        else:
-            logger.info('No new version found')
-            newUpdate = False
-    except ConnectionError:
-        logger.warning("Couldn't connect to server")
-        newUpdate = latest = None
-
-    if newUpdate:
-        userConfirm = messagebox.askyesno(lang.NewUpdateTrue['Title'], lang.NewUpdateTrue['Message'])
-        if userConfirm:
-            InstallNewUpdate(latest)
-    elif latest is None and mode == 'manual':
-        messagebox.showerror(lang.NewUpdateFalse['Title1'], lang.NewUpdateFalse['Message1'])
-    elif mode == 'manual':
-        messagebox.showinfo(lang.NewUpdateFalse['Title2'], lang.NewUpdateFalse['Message2'])
-
-def InstallNewUpdate(latest: str):
-    InstallWindow = Toplevel(root, padx=10)
-    InstallWindow.iconbitmap(resource_path('UI/download.ico'))
-    InstallWindow.resizable(0,0)
-    InstallWindow.focus()
-    InstallWindow.transient(root)
-    InstallWindow.grab_set()
+        return lang[groupKey][itemKey]
+    except TypeError:
+        logger.exception('Language key was referenced before Language pack was loaded')
+        messagebox.showerror('Language key referenced before Language was loaded', 
+        f'''It was tried to load a language key before the Language pack was loaded, it should not be possible to receive this error.
+        Please open an issue and attach the log file of your current session.
+        GitHub: https://github.com/jasger9000/Cryptographer
+        Log file: {logFile}''')
+        root.destroy()
+    except KeyError:
+        logger.exception('The Key entered does not exist in this Language pack')
 
     Label(InstallWindow, text=lang.CryptMain['InstallUpdateTitle']).grid(row=0, column=0, pady=6, padx=10)
     InstallBar = Progressbar(InstallWindow, orient=HORIZONTAL, length=200, mode='determinate')

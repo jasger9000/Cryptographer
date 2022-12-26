@@ -1,0 +1,135 @@
+{
+    "fileTypes": {
+      "text": "Text Dateien",
+      "video": "Video Dateien",
+      "audio": "Audio Dateien",
+      "picture": "Bild Dateien",
+      "all": "Alle Dateien",
+      "encrypted": "Verschlüsselte Dateien",
+      "key": "Schlüssel Dateien",
+      "privateKey": "Privatschlüssel Dateien",
+      "publicKey": "Öffentlich-schlüssel Dateien"
+    },
+    "Phrases": {
+      "open": "Öffnen",
+      "save": "Speichern",
+      "file": "Datei",
+      "encrypt": "Verschlüsseln",
+      "encryption": "Verschlüsselung",
+      "encrypted": "Verschlüsselt",
+      "decrypt": "Entschlüsseln",
+      "decryption": "Entschlüsselung",
+      "decrypted": "Entschlüsselt",
+      "key": "Schlüssel",
+      "keys": "Schlüssel",
+      "private": "Privater Schlüssel",
+      "public": "Öffentlicher Schlüssel",
+      "loaded": "Geladen",
+      "notLoaded": "Nicht geladen",
+      "finish": "Neustarten"
+    },
+    "noLanguagesAvailable": {
+      "Title": "",
+      "Messages": "Keine Sprachen verfügbar"
+    },
+    "fileTooBig": {
+      "Title": "Datei zu groß",
+      "Message1": "Bei Dateien, die größer als 100mb sind, dauert das %s länger.\nMöchten Sie trotzdem fortfahren?",
+      "Message2": "Bei Dateien, die größer als 1 Gigabyte sind, dauert das %s mehrere Minuten, oder schlägt fehl.\nMöchten Sie trotzdem fortfahren?"
+    },
+    "abortedKeyGeneration": {
+      "Title": "Schlüsselgenerierung abgebrochen",
+      "Message": "Die Schlüsselgenerierung wurde abgebrochen, weil Sie nur einen Schlüssel generiert haben, Sie aber beide benötigen!"
+    },
+    "noTextEntered": {
+      "Title": "Keine Nachricht/Datei zum %s angegeben",
+      "Message": "Sie müssen eine Nachricht/einen Dateipfad eingeben, bevor Sie versuchen zu "
+    },
+    "noKeyEntered": {
+      "Title": "Kein %s eingegeben",
+      "Message": "Sie müssen einen %s einfügen, bevor Sie versuchen zu %s"
+    },
+    "wrongKeyEntered": {
+      "Title": "Falscher %s eingegeben",
+      "Message": "Dies ist der falsche $, um diese Nachricht/Datei zu entschlüsseln! Verwenden Sie den richtigen Schlüssel!"
+    },
+    "keyNotFound": {
+      "Title": "Schlüssel nicht gefunden!",
+      "Message": "Der $, den Sie verwenden wollten, existiert nicht!\nBitte verwenden Sie einen vorhandenen Schlüssel!"
+    },
+    "UpdateAvailableTrue": {
+      "Title": "Neue Version verfügbar",
+      "Message": "Es steht eine neue Version zum herunterladen bereit.\n Möchten Sie diese installieren?"
+    },
+    "UpdateAvailableFalse": {
+      "Title": "Kein Update gefunden",
+      "Message": "Sie verwenden derzeit die neueste Version dieser Software."
+    },
+    "UpdateConnectionError": {
+      "Title": "Verbindung zum Server konnte nicht aufgebaut werden",
+      "Message": "Konnte nicht nach Updates suchen,\nEs konnte keine Verbindung zu GitHub aufgebaut werden.\nBitte versuche es später erneut, oder prüfen Sie, ob Sie mit dem Internet verbunden sind."
+    },
+    "versionNotFound": {
+      "Title": "Version nicht gefunden!",
+      "Message": "Die Software, die Sie derzeit verwenden, hat keine registrierte Version, bitte installieren Sie die Software erneut.\nWenn Sie dies bereits getan haben, öffnen Sie bitte ein 'Issue' in meinem GitHub und hänge die log Datei ihrer jetzigen Session an.\nhttps://wwww.github.com/jasger9000/Cryptographer\nLog Datei: %s"
+    },
+    "failedFileTooBig": {
+      "Title": "%s fehlgeschlagen",
+      "Message": "Die Nachricht/Datei konnte nicht $ werden, weil sie zu groß war!"
+    },
+    "failedFileType": {
+      "Title": "%s fehlgeschlagen",
+      "Message": "%s fehlgeschlagen, da der Dateityp nicht unterstützt wird."
+    },
+    "fileNotFound": {
+      "Title": "Datei nicht gefunden",
+      "Message": "Die Datei, die Sie verwenden möchten, wurde nicht gefunden!\nBitte verwenden Sie eine vorhandene Datei!"
+    },
+    "unknownError": {
+      "Title": "Unbekannter Fehler",
+      "Message": "Es ist ein Unbekannte Fehler aufgetreten.\nBitte öffne ein 'issue' und hängen Sie die Logdatei Ihrer aktuellen Sitzung an.\nGitHub: https://github.com/jasger9000/Cryptographer\nLog file: %s"
+    },
+    "SettingsMenu": {
+      "general": "Allgemein",
+      "addNewLanguageBtn": "Neue Sprache hinzufügen",
+      "languageOptionLabel": "Sprache",
+      "rememberKeyOptionLabel": "Schlüssel Merken",
+      "rememberKeyOptionTip": "Wenn diese Option aktiviert ist,\nwird der zuletzt verwendete Schlüssel gespeichert\nund bei jedem Start der Software geladen.",
+      "autoCFUOptionLabel": "Beim Start auf Updates prüfen?",
+      "themes": "Designs",
+      "lightTheme": "Helles Design",
+      "darkTheme": "Dunkles Design",
+      "defaultBtn": "Zurücksetzen",
+      "applyBtn": "Änderungen übernehmen"
+    },
+    "menuBar": {
+      "mode": "Modus",
+      "symLabel": "Symmetrisch",
+      "asymLabel": "Asymmetrisch",
+      "history": "Verlauf",
+      "help": "Hilfe",
+      "openGitHub": "GitHub Seite Öffnen",
+      "openInstallPath": "Installationspfad öffnen",
+      "settings": "Einstellungen",
+      "about": "Über Cryptographer",
+      "CheckForUpdates": "Nach Updates suchen"
+    },
+    "window": {
+      "symTitle": "Symmetrischer Cryptographer",
+      "asymTitle": "Asymmetrischer Cryptographer",
+      "installWindowTitle": "Installing new Version",
+      "settingsWindowTitle": "Settings",
+      "generateKeyBtn": "Schlüssel generieren",
+      "generateKeypairBtn": "Schlüsselpaar Generieren",
+      "browseBtn": "Durchsuchen",
+      "browseKeyBtn": "Schlüssel laden",
+      "indicatorTooltip": "Zeigt an, ob ein Schlüssel geladen wurde.\nStatus: %s",
+      "encryptMessageTitle": "Verschlüssel eine Nachricht:",
+      "encryptFileTitle": "Verschlüssel eine Datei:",
+      "decryptMessageTitle": "Entschlüssel eine Nachricht:",
+      "decryptFileTitle": "Entschlüssel eine Datei:",
+      "outputTitle": "Output",
+      "deleteBtn": "Löschen",
+      "copyBtn": "Kopieren"
+    }
+}
