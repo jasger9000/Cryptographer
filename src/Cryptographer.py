@@ -1,4 +1,4 @@
-import importlib
+from time import strftime
 from tktooltip import ToolTip
 from tkinter import HORIZONTAL, UNDERLINE, IntVar, Toplevel, font, messagebox, Tk, Menu, TclError
 from ttkbootstrap import Button, Combobox, Notebook, Progressbar, Entry, Radiobutton, Checkbutton, Label, Frame, LabelFrame, Style
@@ -40,97 +40,66 @@ streamHandler.setFormatter(fmt)
 streamHandler.setLevel(logging.DEBUG)
 logger.addHandler(streamHandler)
 
-version = 'v0.7.0'
-stagedConfig = {}
 
-def LoadFileTypes(lang):
-    return (
-    (lang.fileTypes['Text'], ('*.txt', '*.doc', '*.docx', '*.log', '*.msg', '*.odt', '*.pages', '*.rtf', '*.tex', '*.wpd', '*.wps')),                   # 0
-    (lang.fileTypes['Video'], ('*.mp4', '*.mov', '*.avi', '*.flv', '*.mkv', '*.wmv', '*.avchd', '*.webm', '*MPEG-4', '*.H.264')),                       # 1
-    (lang.fileTypes['Audio'], ('*.aif', '*.aiff', '*.iff', '*.m3u', '*.m4a', '*.mp3', '*.mpa', '*.wav', '*.wma', '*.aup3', '*.aup', '*.ogg', '*.mp2')), # 2
-    (lang.fileTypes['Picture'], ('*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp', '*.raw', '*.tiff', '*.psd', '*.cr2')),                                   # 3
-    (lang.fileTypes['All'], '*.*'),                                                                                                                     # 4
-    (lang.fileTypes['Encrypted'], '*.Encrypted'),                                                                                                       # 5
-    (lang.fileTypes['Key'], '*.key'),                                                                                                                   # 6
-    (lang.fileTypes['PrivateKey'], '*.priv_key'),                                                                                                       # 7
-    (lang.fileTypes['PublicKey'], '*.pub_key'),                                                                                                         # 8
-    )
+def resourcePath(relativePath):
+    """Creates a connection to a Ressource like an image which is compiled when the application is freezed to be able to still access it"""
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relativePath)
 
-def LoadLang(l: str):
-    if os.path.exists('Languages'):
-        if type(l) is not str:
-            l = langBox.get()
-        try:
-            lang = importlib.import_module(l)
-            if lang.version < 1:
-                logger.critical('Language pack too old')
-                messagebox.showerror('Language pack too old', 'The Language pack you are using is too old, please install a newer version')
-                return None
-            UpdateConfig('Settings', 'Language', l)
-        except ModuleNotFoundError:
-            logger.error('Language Module not found, continuing with English')
-            try:
-                messagebox.showerror("Language not found", "Couldn't find the Language you are trying to use, please reinstall the Language pack")
-                lang = importlib.import_module('English')
-            except ModuleNotFoundError:
-                logger.exception('English Language pack not installed')
-                messagebox.showerror('English not found', 'Cryptographer tried to fallback to English but failed because English is not installed.\nPlease reinstall the English Language pack.')
-                return None
-        except NameError: # will trigger on startup not important
-            pass
-        return lang
-    else:
-        logger.critical('Language folder not found')
-        messagebox.showerror("Couldn't find Language folder", 
-        "Cryptographer did not find the Language folder.\nPlease reinstall the Language folder from Github, or if you think this is a bug,\n\please open a issue on Github.\nGithub: https://www.github.com/jasger9000/Cryptographer")
-        return None
+def generateConfig():
+    """Generates a new config and saves it to config.ini in the installation folder"""
+    config = ConfigParser()
 
+    logger.info('Generating new config')
+    config.add_section('Settings')
+    config.set('Settings', 'Language', 'English')
+    config.set('Settings', 'SaveLastKey', '0')
+    config.set('Settings', 'Password', 'False')
+    config.set('Settings', 'CFUatStartup', '1')
+    config.set('Settings', 'Theme', '1')
+    config.set('Settings', 'DefaultPath', os.path.expandvars(R'C:\Users\$USERNAME\Documents'))
+    
+    config.add_section('State')
+    config.set('State', 'Mode', 'Symmetric')
+    config.set('State', 'Keyfile', 'None')
+    config.set('State', 'PublicKeyfile', 'None')
+    config.set('State', 'PrivateKeyfile', 'None')
+    config.set('State', 'locked', 'False')
+    config.set('State', 'Password', 'None')
+    config.set('State', 'Version', '1')
 
-def LoadConfig(Force: bool = False):
+    with open('config.ini', 'w') as f:
+        config.write(f)
+    logger.info('New Config generated')
+
+def LoadConfig():
+    """Loads the config from config.ini in memory and generates a new one if it doesn't exist"""
     config = ConfigParser()
 
     logger.info('Searching for config')
-    if os.path.exists('config.ini') is False or Force is True:
-        logger.warning('Config not found, generating new')
-        config.add_section('Settings')
-        config.set('Settings', 'Language', 'English')
-        config.set('Settings', 'SaveLastKey', '0')
-        config.set('Settings', 'Password', 'False')
-        config.set('Settings', 'CFUatStartup', '1')
-        config.set('Settings', 'Theme', '1')
-        config.set('Settings', 'DefaultPath', os.path.expandvars(R'C:\Users\$USERNAME\Documents'))
-        
-        config.add_section('State')
-        config.set('State', 'Mode', 'Symmetric')
-        config.set('State', 'Keyfile', 'None')
-        config.set('State', 'PublicKeyfile', 'None')
-        config.set('State', 'PrivateKeyfile', 'None')
-        config.set('State', 'locked', 'False')
-        config.set('State', 'Password', 'None')
-        config.set('State', 'Version', '1')
-
-        with open('config.ini', 'w') as f:
-            config.write(f)
-        lang = LoadLang('English')
-        logger.info('New Config generated')
+    if os.path.exists('config.ini') is False:
+       generateConfig()
+       config.read('config.ini')
     else:
-        logger.info('Config found, loading...')
+        logger.info('Config found, loading now')
         config.read('config.ini')
 
         if int(config['State']['Version']) < 1:
-            logger.warning('Config too old generating new')
+            logger.warning('Config too old')
             os.remove('config.ini')
-            LoadConfig(True)
-        else:
-            lang = LoadLang(config['Settings']['Language'])
-            logger.info('Using Language: ' + config['Settings']['Language'])
-            if config['Settings']['theme'] == '1':
-                Style('litera')
-                logger.info('Using Light theme')
-            else:
-                Style('darkly')
-                logger.info('Using Dark theme')
-            logger.info('Config loaded')
+            generateConfig()
+            config.read('config.ini')
+    
+    
+    lang = LoadLang(config['Settings']['Language'])
+    if config['Settings']['theme'] == '1':
+        Style('litera')
+        logger.info('Using Light theme')
+    else:
+        Style('darkly')
+        logger.info('Using Dark theme')
+
+    logger.info('Config loaded')
     return config, lang
 
 def UpdateConfig(Section: str, Option: str | list, Value: str, Apply=False):
