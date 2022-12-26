@@ -104,29 +104,83 @@ def LoadConfig():
     logger.info('Config loaded')
     return config, lang
 
-def UpdateConfig(Section: str, Option: str | list, Value: str, Apply=False):
+
+def UpdateConfig(section: str | None, option: str | None, value: str | None, apply: bool = False):
+    """Stages and updates the config file in 3 different modes
+    ## Mode 1
+    In this mode you stage a change to the config but don't apply it until the function gets called in the second mode
+
+    Raises ValueError if the option does not exist in the config in the given section 
+
+    ### Arguments
+    section: the section of the config you want to change
+    option: the option of the config you want to change
+    value: the value you want to be the option
+    apply: you can completely ignore this it does not serve a function in the first mode
+
+    ## Mode 2
+    In this mode you apply every staged change that was given in the session
+
+    ### Arguments
+    section: you can completely ignore this it does not serve a function in the second mode
+    option: you can completely ignore this it does not serve a function in the second mode
+    value: you can completely ignore this it does not serve a function in the second mode
+    apply: THIS NEEDS TO BE True
+
+    ## Mode 3
+    In this mode you directly apply a value to an option in the config without staging it first
+
+    Raises ValueError if the option does not exist in the config in the given section
+
+    ### Arguments
+    section: the section of the config you want to change
+    option: the option of the config you want to change
+    value: the value you want to be the option
+    apply: THIS NEEDS TO BE True
+    """
     global stagedConfig
 
-    try:
-        ApplyBtn['state'] = 'normal'
-    except NameError:
-        pass
-    
-    if type(Option) is list:
-        if Apply == True:
-            for i in Option:
-                config.set(Section, i, Value)
-                with open('config.ini', 'w') as f:
-                    config.write(f)
+    # Mode 1
+    if apply == False:
+        
+        # Makes the Apply Button in the Settings Window pressaale if the window is open
+        try:
+            ApplyBtn['state'] = 'normal'
+        except NameError:
+            pass
+
+        if config.has_option(section, option):
+            if stagedConfig.get(section):
+                stagedConfig[section].update({option: value})
+            else:
+                stagedConfig.update({section: {option: value}})
+            logger.info('Staged value change in config')
         else:
-            [stagedConfig.update({i: [Section, Value]}) for i in Option if i]
-    else:
-        if Apply == True:
-            config.set(Section, Option, Value)
+            # If the option doesn't exist in the section
+            raise ValueError(f'The option "{option}" in the section "{section}" does not exist')
+    # Mode 2
+    elif apply == True and section is None:
+        if stagedConfig > 0:
+            for section in stagedConfig.keys():
+                for option in stagedConfig[section]:
+                    value = stagedConfig[section][option]
+                    config.set(section, option, value)
             with open('config.ini', 'w') as f:
                 config.write(f)
+            stagedConfig.clear()
+            logger.info('Applied all staged changes to the config')
         else:
-            stagedConfig.update({Option: [Section, Value]})
+            logger.info('There are no staged changes that could be applied')
+    # Mode 3
+    elif apply == True and section is not None:
+        if config.has_option(section, option):
+            config.set(section, option, value)
+            with open('config.ini', 'w') as f:
+                config.write(f)
+            logger.info('Applied value change to config directly')
+        else:
+            # If the option doesn't exist in the section
+            raise ValueError(f'The option "{option}" in the section "{section}" does not exist')
 
 
 def CheckForUpdates(automatic: bool = True, pVersion: str = None):
