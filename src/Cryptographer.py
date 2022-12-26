@@ -228,35 +228,8 @@ def InstallNewUpdate(latest: str):
             Popen(f'cd /d {os.getcwd()} && start python -c "from updater import InstallVersion; InstallVersion({chr(39)}{os.getcwd()}{chr(39)}, {chr(39)}Cryptographer.zip{chr(39)}, {chr(39)}Cryptographer.exe{chr(39)}, True)" && exit', shell=True)
             root.destroy()
 
-        if mode == 'Symmetric':      
-            SymWindow(EncryptFrame, DecryptFrame, KeyFrame, out)
-            KeyFrame.config(text=lang.Main['KeyTitle'])
-            root.title(f'{lang.Main["title"]} {version}')
-            TitleLabel.config(text=lang.Main["title"])
-            UpdateConfig('State', 'Mode', 'Symmetric', True)
-        elif mode == 'Asymmetric':
-            AsymWindow(EncryptFrame, DecryptFrame, KeyFrame, out, lang.Language)
-            KeyFrame.config(text=lang.AsymMain['KeysTitle'])
-            root.title(f'{lang.AsymMain["title"]} {version}')
-            TitleLabel.config(text=lang.AsymMain["title"])
-            UpdateConfig('State', 'Mode', 'Asymmetric', True)
-        logger.info('Loading complete')
-
-def LoadFrames():
-    global EncryptFrame, DecryptFrame, KeyFrame
-
-    # Tabs
-    TabRegister = Notebook(root)
-    TabRegister.grid(row=1, column=0, padx=20)
-
-    EncryptFrame = Frame(TabRegister)
-    DecryptFrame = Frame(TabRegister)
-
-    EncryptFrame.pack(fill='both', expand=1)
-    DecryptFrame.pack(fill='both', expand=1)
-
-    TabRegister.add(EncryptFrame, text=lang.Dialog['Encrypt'])
-    TabRegister.add(DecryptFrame, text=lang.Dialog['Decrypt'])
+def InstallNewLanguage():
+    pass
 
 def LoadLang(l):
     """Loads a Language pack if it is installed and asks the user to reinstall the English one if the users and the English one is missing.
@@ -488,6 +461,7 @@ def main():
     
     # Help Menu
     HelpMenu = Menu(menubar, tearoff=0)
+
     HelpMenu.add_command(label=getTranslation('menuBar', 'openGitHub'), command=lambda: Popen('explorer "https://github.com/jasger9000/Cryptographer"'))
     HelpMenu.add_command(label=getTranslation('menuBar', 'openInstallPath'), command=lambda: Popen(f'explorer "{os.getcwd()}"'))
     HelpMenu.add_separator()
