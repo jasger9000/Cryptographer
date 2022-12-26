@@ -300,7 +300,7 @@ def Copy():
         root.clipboard_clear()
         root.clipboard_append(out.get())
     except Exception:
-        messagebox.showerror(title=lang.Messages['UnknownTitle'], message=lang.Messages['UnknownMessage'])
+        messagebox.showerror(title=getTranslation('unknownError', 'Title'), message=getTranslation('unknownError', 'Message'))
         logger.exception(f'Unknown error/uncaught exception in Copy function')
     finally:
         logger.info('Copy function finished')
@@ -311,13 +311,30 @@ def Delete():
         out.config(state='normal')
         out.delete(0, 'end')
     except Exception:
-        messagebox.showerror(title=lang.Messages['UnknownTitle'], message=lang.Messages['UnknownMessage'])
+        messagebox.showerror(title=getTranslation('unknownError', 'Title'), message=getTranslation('unknownError', 'Message'))
         logger.exception(f'Unknown/uncaught exception in Delete function')
     finally:
         out.config(state='readonly')
         logger.info('Delete function finished')
 
 
+    SettingsWindow.title(getTranslation('window', 'settingsWindowTitle'))
+    Label(SettingsWindow, text=getTranslation('window', 'settingsWindowTitle') , font=('Helvetica', 14, font.BOLD, UNDERLINE)).grid(row=0, column=0, pady=12)
+    Label(SettingsFrame, text=getTranslation('SettingsMenu', 'general'), font=('Helvetica', 8, font.BOLD, UNDERLINE)).grid(row=0, column=0, pady=(12, 2))
+    Label(SettingsFrame, text=getTranslation('SettingsMenu', 'languageOptionLabel')).grid(row=1, column=0, pady=5)
+    Button(SettingsFrame, text=getTranslation('SettingsMenu', 'addNewLanguageBtn'), command=InstallNewLanguage).grid(row=1, column=2, pady=5)
+    SaveLabel = Label(SettingsFrame, text=getTranslation('SettingsMenu', 'rememberKeyOptionLabel'))
+    ToolTip(SaveLabel, msg=getTranslation('SettingsMenu', 'rememberKeyOptionTip'))
+    Label(SettingsFrame, text=getTranslation('SettingsMenu', 'autoCFUOptionLabel')).grid(row=3, column=0, pady=5, padx=(0, 20))
+    Label(SettingsFrame, text=getTranslation('SettingsMenu', 'themes'), font=('Helvetica', 8, font.BOLD, UNDERLINE)).grid(row=4, column=0, pady=(12, 2))
+    Label(SettingsFrame, text=getTranslation('SettingsMenu', 'lightTheme')).grid(row=5, pady=5)
+    Label(SettingsFrame, text=getTranslation('SettingsMenu', 'darkTheme')).grid(row=6, pady=5)
+    DefaultBtn = Button(frame, text=getTranslation('SettingsMenu', 'defaultBtn'), command=lambda: [generateConfig(), root.destroy(), os.startfile(f'{os.getcwd()}/Cryptographer.exe')])
+    ApplyBtn = Button(frame, state='disabled',text=getTranslation('SettingsMenu', 'applyBtn'), command=lambda: UpdateConfig(apply=True))
+        root.title(f'{getTranslation("window", "symTitle")} {version}')
+        TitleLabel.config(text=getTranslation('window', 'symTitle'))
+        root.title(f'{getTranslation("window", "asymTitle")} {version}')
+        TitleLabel.config(text=getTranslation('window', 'asymTitle'))
 def main():
     global root, TitleLabel, out, lang, config
 
@@ -339,10 +356,10 @@ def main():
         logger.warning("Couldn't find icon, continuing without")
     except NameError:
         logger.error("Could not find Version variable, corruption likely")
-        root.title(lang.VersionNotFound['Title'])
+        root.title(getTranslation('versionNotFound', 'Title'))
         root.bell()
         userConfirm = messagebox.askokcancel(lang.VersionNotFound['Title'], lang.VersionNotFound['Message'])
-        if userConfirm:
+        if messagebox.askokcancel(getTranslation('versionNotFound', 'Title'), getTranslation('versionNotFound', 'Message')):
             InstallNewUpdate(requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
         else:
             return
@@ -361,37 +378,35 @@ def main():
     ModeMenu = Menu(menubar, tearoff=0)
     
     # Mode Menu
-    ModeMenu.add_command(label=lang.CryptMain['ModeSymLabel'], command=lambda: SwitchMode('Symmetric'))
-    ModeMenu.add_command(label=lang.CryptMain['ModeAsymLabel'], command=lambda: SwitchMode('Asymmetric'))
-    menubar.add_cascade(label=lang.CryptMain['ModeMenu'], menu=ModeMenu)
+    ModeMenu.add_command(label=getTranslation('menuBar', 'symLabel'), command=lambda: SwitchMode('Symmetric'))
+    ModeMenu.add_command(label=getTranslation('menuBar', 'asymLabel'), command=lambda: SwitchMode('Asymmetric'))
+    menubar.add_cascade(label=getTranslation('menuBar', 'mode'), menu=ModeMenu)
 
     # # History Menu
     # HistoryMenu = Menu(menubar, tearoff=0)
-    # menubar.add_cascade(label=lang.CryptMain['HistoryMenu'], menu=HistoryMenu)
+    # menubar.add_cascade(label=getTranslation('menuBar', 'history'), menu=HistoryMenu)
     
     # Help Menu
     HelpMenu = Menu(menubar, tearoff=0)
-    HelpMenu.add_command(label=lang.CryptMain['HelpGithubLabel'], command=lambda: Popen('explorer "https://github.com/jasger9000/Cryptographer"'))
-    HelpMenu.add_command(label=lang.CryptMain['HelpFilesLabel'], command=lambda: Popen(f'explorer "{os.getcwd()}"'))
+    HelpMenu.add_command(label=getTranslation('menuBar', 'openGitHub'), command=lambda: Popen('explorer "https://github.com/jasger9000/Cryptographer"'))
+    HelpMenu.add_command(label=getTranslation('menuBar', 'openInstallPath'), command=lambda: Popen(f'explorer "{os.getcwd()}"'))
     HelpMenu.add_separator()
-    HelpMenu.add_command(label=lang.CryptMain['HelpSettingsLabel'], command=OpenSettings)
+    HelpMenu.add_command(label=getTranslation('menuBar', 'settings'), command=OpenSettings)
     HelpMenu.add_separator()
     # HelpMenu.add_command(label=lang.CryptMain['HelpAboutLabel'])
-    HelpMenu.add_command(label=lang.CryptMain['HelpCFULabel'], command=lambda: CheckForUpdates('manual'))
-    menubar.add_cascade(label=lang.CryptMain['HelpMenu'], menu=HelpMenu)
+    HelpMenu.add_command(label=getTranslation('menuBar', 'CheckForUpdates'), command=lambda: CheckForUpdates(False))
+    menubar.add_cascade(label=getTranslation('menuBar', 'help'), menu=HelpMenu)
 
     root.config(menu=menubar)
 
     # Output
-    frame3 = LabelFrame(root, text=lang.Main['OutputTitle'])
+    frame3 = LabelFrame(root, text=getTranslation('window', 'outputTitle'))
     frame3.grid(row=2, column=0, padx=10, pady=12, columnspan=2)
 
     out = Entry(frame3, width=50, state='readonly')
     out.grid(row=0, column=0, padx=5, rowspan=2)
-    Button(frame3, text=lang.Main['CopyBtn'], command=Copy).grid(row=0, column=1, padx=10)
-    Button(frame3, text=lang.Main['DeleteBtn'], command=Delete).grid(row=1, column=1, padx=10, pady=6)
-
-
+    Button(frame3, text=getTranslation('window', 'copyBtn'), command=Copy).grid(row=0, column=1, padx=10)
+    Button(frame3, text=getTranslation('window', 'deleteBtn'), command=Delete).grid(row=1, column=1, padx=10, pady=6)
 
     if config['Settings']['CFUatStartup'] == '1':
         threading.Thread(target=CheckForUpdates, daemon=True).start()
