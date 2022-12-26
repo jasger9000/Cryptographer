@@ -15,20 +15,24 @@ from configparser import ConfigParser
 import threading
 import sys
 
-sys.path.insert(0, f'{os.getcwd()}/Languages') 
+
+version = 'v0.7.0'
+stagedConfig = {}
+logFile = f'{os.environ["TEMP"]}/Cryptographer Logs/Cryptographer_{version}_{strftime("%d-%m-%Y-%H-%M-%S")}.log'
 
 # logger config
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-fmt = logging.Formatter('[%(levelname)s] %(asctime)s - %(name)s - %(message)s')
+fmt = logging.Formatter('[%(levelname)s] %(asctime)s - %(name)s - %(message)s', datefmt="%d/%m/%Y %H:%M:%S")
 
 # fileHandler config
-fileHandler = logging.FileHandler('Cryptographer.log')
+if not os.path.exists(f'{os.environ["TEMP"]}/Cryptographer Logs/'):
+    os.system('mkdir "%tmp%\Cryptographer Logs"')
+fileHandler = logging.FileHandler(logFile)
 fileHandler.setLevel(logging.DEBUG)
 fileHandler.setFormatter(fmt)
 logger.addHandler(fileHandler)
-with open('Cryptographer.log', 'w') as f:
-    f.write('')
+
 
 # streamHandler config
 streamHandler = logging.StreamHandler()
