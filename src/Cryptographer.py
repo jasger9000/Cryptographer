@@ -1,15 +1,10 @@
 from time import strftime
 from tktooltip import ToolTip
 from tkinter import HORIZONTAL, UNDERLINE, IntVar, Toplevel, font, messagebox, Tk, Menu, TclError
-from ttkbootstrap import Button, Combobox, Notebook, Progressbar, Entry, Radiobutton, Checkbutton, Label, Frame, LabelFrame, Style
-from Sym_Cryptographer import Window as SymWindow
-from Asym_Cryptographer import Window as AsymWindow
+from ttkbootstrap import Button, Combobox, Notebook, Progressbar, Entry, Radiobutton, Checkbutton, Frame, Label, LabelFrame, Style
 import logging
-import requests
-from packaging.version import parse
-from urllib import request
 import os
-import zipfile
+from urllib import request, error
 from subprocess import Popen
 from configparser import ConfigParser
 import threading
@@ -317,36 +312,6 @@ def getTranslation(groupKey: str, itemKey: str):
     except KeyError:
         logger.exception('The Key entered does not exist in this Language pack')
 
-    Label(InstallWindow, text=lang.CryptMain['InstallUpdateTitle']).grid(row=0, column=0, pady=6, padx=10)
-    InstallBar = Progressbar(InstallWindow, orient=HORIZONTAL, length=200, mode='determinate')
-    InstallBar.grid(row=1, column=0, ipady=8.499999999999999115)
-    FinishBtn = Button(InstallWindow, text='Finish', command=lambda: [logger.info('Finished installing, restarting now'), Popen(f'"{os.getcwd()}/Cryptographer {latest}.exe"'), root.destroy()], state='disabled')
-    FinishBtn.grid(row=1, column=1)
-    ProgressLabel = Label(InstallWindow, text='')
-    ProgressLabel.grid(row=2, column=0, pady=10)
-    
-    logger.info('Downloading Update')
-    ProgressLabel.config(text=lang.CryptMain['InstallUpdateProgress0'])
-    file = f'{os.getcwd()}/Cryptographer.zip'
-    url = f'https://github.com/jasger9000/Cryptographer/releases/download/{latest}/Cryptographer.zip'
-    request.urlretrieve(url, file)
-    InstallBar['value'] += 66
-    logger.info('Update downloaded')
-
-    ProgressLabel.config(text=lang.CryptMain['InstallUpdateProgress1'])
-    os.system('rmdir UI /S /Q')
-    os.remove('Languages/English.py')
-    with zipfile.ZipFile(file, 'r') as zip_ref:
-        zip_ref.extractall(os.getcwd())
-    InstallBar['value'] += 66
-    logger.info('Extracted Update')
-
-    ProgressLabel.config(text=lang.CryptMain['InstallUpdateProgress2'])    
-    if os.path.exists(file):
-        os.remove(file)
-    InstallBar['value'] += 67
-    ProgressLabel.config(text=lang.CryptMain['InstallUpdateProgress3'])
-    FinishBtn['state'] = 'normal'
 
 def Copy():
     logger.info('Copy function initiated')
@@ -372,19 +337,78 @@ def Delete():
         logger.info('Delete function finished')
 
 
+def OpenSettings():
+    """Opens the Settings Window"""
+    global langBox, ApplyBtn, stagedConfig
+
+    # Setting Window config
+    logger.info('Opening Settings window')
+
+    SettingsWindow = Toplevel(root)
     SettingsWindow.title(getTranslation('window', 'settingsWindowTitle'))
+    SettingsWindow.iconbitmap(resourcePath('UI/settings.ico'))
+    SettingsWindow.resizable(0,0)
+    SettingsWindow.focus()
+    SettingsWindow.transient(root)
+    SettingsWindow.grab_set()
+    SettingsWindow.protocol("WM_DELETE_WINDOW", lambda: [stagedConfig.clear(), logger.info('cleared all staged Config changes because Settings Window was closed'), SettingsWindow.destroy()])
+    logger.info('Loaded Window config')
+    
     Label(SettingsWindow, text=getTranslation('window', 'settingsWindowTitle') , font=('Helvetica', 14, font.BOLD, UNDERLINE)).grid(row=0, column=0, pady=12)
+    SettingsFrame = Frame(SettingsWindow)
+    SettingsFrame.grid(row=1, column=0, padx=20)
+
+    frame = Frame(SettingsWindow)
+    frame.grid(row=2, column=0, columnspan=2, padx=10, pady=(0, 12))
+
     Label(SettingsFrame, text=getTranslation('SettingsMenu', 'general'), font=('Helvetica', 8, font.BOLD, UNDERLINE)).grid(row=0, column=0, pady=(12, 2))
+
+    # Language Setting
     Label(SettingsFrame, text=getTranslation('SettingsMenu', 'languageOptionLabel')).grid(row=1, column=0, pady=5)
+    langList = [entry.name.strip('.json') for entry in os.scandir('Languages') if entry.is_file() and os.path.splitext(entry.name)[1] == '.json']
+    langBox = Combobox(SettingsFrame, values=langList, state='readonly')
+    langBox.set(config['Settings']['language'])
+    langBox.bind('<<ComboboxSelected>>', lambda event: UpdateConfig('Settings', 'language', langBox.get()))
+    langBox.grid(row=1, column=1, pady=5)
     Button(SettingsFrame, text=getTranslation('SettingsMenu', 'addNewLanguageBtn'), command=InstallNewLanguage).grid(row=1, column=2, pady=5)
+
+    # Save key?
     SaveLabel = Label(SettingsFrame, text=getTranslation('SettingsMenu', 'rememberKeyOptionLabel'))
+    SaveLabel.grid(row=2, column=0, pady=5)
     ToolTip(SaveLabel, msg=getTranslation('SettingsMenu', 'rememberKeyOptionTip'))
+    saveKey = IntVar(value=config.getint('Settings', 'savelastkey'))
+    Checkbutton(SettingsFrame, variable=saveKey, onvalue=1, offvalue=0, command=lambda: [
+        UpdateConfig('Settings', 'SaveLastKey', str(saveKey.get())), 
+        UpdateConfig('State', 'keyfile', 'None'), 
+        UpdateConfig('State', 'publickeyfile', 'None'), 
+        UpdateConfig('State', 'privatekeyfile', 'None')
+        ]).grid(row=2, column=1, pady=5)
+
+    # Automatic CFU?
     Label(SettingsFrame, text=getTranslation('SettingsMenu', 'autoCFUOptionLabel')).grid(row=3, column=0, pady=5, padx=(0, 20))
+    autoCFU = IntVar(value=config['Settings']['CFUatStartup'])
+    Checkbutton(SettingsFrame, variable=autoCFU, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'CFUatStartup', str(autoCFU.get()))).grid(row=3, column=1, pady=5)
+
+    # Light/Dark/Windows mode
     Label(SettingsFrame, text=getTranslation('SettingsMenu', 'themes'), font=('Helvetica', 8, font.BOLD, UNDERLINE)).grid(row=4, column=0, pady=(12, 2))
+
+    theme = IntVar(value=config['Settings']['theme'])
     Label(SettingsFrame, text=getTranslation('SettingsMenu', 'lightTheme')).grid(row=5, pady=5)
+    Radiobutton(SettingsFrame, variable=theme, value=1, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=5, column=1, pady=5)
+
     Label(SettingsFrame, text=getTranslation('SettingsMenu', 'darkTheme')).grid(row=6, pady=5)
+    Radiobutton(SettingsFrame, variable=theme, value=2, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=6, column=1, pady=5)
+    
+    # Default and Apply Button
     DefaultBtn = Button(frame, text=getTranslation('SettingsMenu', 'defaultBtn'), command=lambda: [generateConfig(), root.destroy(), os.startfile(f'{os.getcwd()}/Cryptographer.exe')])
+    DefaultBtn.grid(row=0, pady=5)
     ApplyBtn = Button(frame, state='disabled',text=getTranslation('SettingsMenu', 'applyBtn'), command=lambda: UpdateConfig(apply=True))
+    ApplyBtn.grid(row=0, column=1, pady=5)
+    
+    logger.info('Finished loading')
+    root.wait_window()
+
+
         root.title(f'{getTranslation("window", "symTitle")} {version}')
         TitleLabel.config(text=getTranslation('window', 'symTitle'))
         root.title(f'{getTranslation("window", "asymTitle")} {version}')
