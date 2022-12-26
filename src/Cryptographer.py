@@ -39,7 +39,7 @@ logger.addHandler(streamHandler)
 
 
 def resourcePath(relativePath):
-    """Creates a connection to a Ressource like an image which is compiled when the application is freezed to be able to still access it"""
+    """Creates a connection to a Ressource like an image which is compiled when the application is frozen to be able to still access it"""
     base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relativePath)
 
@@ -314,6 +314,7 @@ def getTranslation(groupKey: str, itemKey: str):
 
 
 def Copy():
+    """Copies the output from the entry to the users clipboard"""
     logger.info('Copy function initiated')
     try:
         root.clipboard_clear()
@@ -325,6 +326,7 @@ def Copy():
         logger.info('Copy function finished')
 
 def Delete():
+    """Deletes the output from the entry"""
     logger.info('Delete function initiated')
     try:
         out.config(state='normal')
@@ -409,48 +411,68 @@ def OpenSettings():
     root.wait_window()
 
 
+def SwitchMode(switchMode: str):
+    """Switches from Symmetric to Asymmetric Cryptography mode and back"""
+
+    global currentMode
+
+    logger.info('Switching mode')
+    if currentMode == switchMode:
+        logger.info('Aborted switching because Software is already in the right mode')
+    elif switchMode == 'Symmetric':
+        #TODO here needs to be the symWindow function
+        #TODO here needs to be a thing that changes the text of the Frame for the keys
         root.title(f'{getTranslation("window", "symTitle")} {version}')
         TitleLabel.config(text=getTranslation('window', 'symTitle'))
+        UpdateConfig('State', 'mode', 'Symmetric', True)
+    elif switchMode == 'Asymmetric':
+        #TODO here needs to be the asymWindow function
+        #TODO here needs to be a thing that changes the text of the Frame for the keys
         root.title(f'{getTranslation("window", "asymTitle")} {version}')
         TitleLabel.config(text=getTranslation('window', 'asymTitle'))
+        UpdateConfig('State', 'mode', 'Asymmetric', True)
+    else:
+        raise ValueError(f'The mode given is not valid (mode given {switchMode}) please use "Symmetric" or "Asymmetric"')
+    currentMode = switchMode
+    logger.info('switching complete')
+
+
 def main():
-    global root, TitleLabel, out, lang, config
+    global root, out, lang, TitleLabel, currentMode, config
 
     # Tk Config
     root = Tk()
+
     root.resizable(0,0)
-    root.geometry('300x300')
+    root.geometry('500x300')
     TitleLabel = Label(root, text='', font=('Helvetica', 14, font.BOLD, UNDERLINE)) # text will change when loading a mode
     TitleLabel.grid(row=0, column=0, columnspan=2, pady=12)
     updater.addFileHandlerLogging(logFile)
     config, lang = LoadConfig()
     if not lang:
         return
-        
+
+    # Tries to make the title, if the version variable does not exist and insert the icon
     try:
         root.title(f'Cryptographer {version}')
         root.iconbitmap('Cryptographer.exe')
     except TclError:
+        # Gets triggered if the icon does not exist, this is only possible while programming so it can just be passed
         logger.warning("Couldn't find icon, continuing without")
     except NameError:
+        # Gets triggered if the version variable is not found which is most likely because of my stupidity of accidentally deleting the version variable
+        # ask the user to reinstall the software
         logger.error("Could not find Version variable, corruption likely")
         root.title(getTranslation('versionNotFound', 'Title'))
         root.bell()
-        userConfirm = messagebox.askokcancel(lang.VersionNotFound['Title'], lang.VersionNotFound['Message'])
+        
         if messagebox.askokcancel(getTranslation('versionNotFound', 'Title'), getTranslation('versionNotFound', 'Message')):
-            InstallNewUpdate(requests.get('https://api.github.com/repos/jasger9000/Cryptographer/releases/latest').json()['tag_name'])
+            CheckForUpdates(False, 'v0.0.0')
         else:
             return
 
-    if os.path.exists(f'{os.getcwd()}\Cryptographer {version}.exe'):
-        try:
-            os.remove(f'{os.getcwd()}\Cryptographer.exe')
-        except FileNotFoundError:
-            pass
-        os.rename(f'{os.getcwd()}\Cryptographer {version}.exe', 'Cryptographer.exe')
-        Popen(f'"{os.getcwd()}/Cryptographer.exe"')
-        return
-
+    # initialises variable that keeps track of the current mode the application is in can be 'Symmetric' or 'Asymmetric'
+    currentMode = ''
 
     menubar = Menu(root)
     ModeMenu = Menu(menubar, tearoff=0)
@@ -471,7 +493,7 @@ def main():
     HelpMenu.add_separator()
     HelpMenu.add_command(label=getTranslation('menuBar', 'settings'), command=OpenSettings)
     HelpMenu.add_separator()
-    # HelpMenu.add_command(label=lang.CryptMain['HelpAboutLabel'])
+    # HelpMenu.add_command(label=getTranslation('menuBar', 'about'))
     HelpMenu.add_command(label=getTranslation('menuBar', 'CheckForUpdates'), command=lambda: CheckForUpdates(False))
     menubar.add_cascade(label=getTranslation('menuBar', 'help'), menu=HelpMenu)
 

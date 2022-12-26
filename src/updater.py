@@ -38,9 +38,9 @@ def CheckNewVersion(version: str, gitHubRepo: str, TOKEN: str = None):
     try:
         logger.info('Trying to get latest version')
         if TOKEN:
-            latest = requests.get(f'https://api.github.com/repos{gitHubRepo.split("github.com")[1]}releases/latest', headers={'Authorization': 'token ' + TOKEN}).json()['tag_name']
+            latest = requests.get(f'https://api.github.com/repos{gitHubRepo.lower().split("github.com")[1]}releases/latest', headers={'Authorization': 'token ' + TOKEN}).json()['tag_name']
         else:
-            latest = requests.get(f'https://api.github.com/repos{gitHubRepo.split("github.com")[1]}releases/latest').json()['tag_name']
+            latest = requests.get(f'https://api.github.com/repos{gitHubRepo.lower().split("github.com")[1]}releases/latest').json()['tag_name']
         logger.info('Got latest version')
         logger.info(f'latest version: {latest}')
         if parse(latest) > parse(version):
@@ -64,8 +64,8 @@ def DownloadVersion(version: str, gitHubRepo: str, downloadFile: str, applicatio
     
     # Arguments
     version: the version that is to be installed
-    githubRepo: the link to the repository Expample: https://github.com/jasger9000/Cryptographer/
-    downloadFile: The name of the file that is to be downloaded Exmaple: xyz.zip
+    gitHubRepo: the link to the repository Example: https://github.com/jasger9000/Cryptographer/
+    downloadFile: The name of the file that is to be downloaded Example: xyz.zip
     applicationDir: The director that the new version is to be installed in
     delFiles: Files and Dirs that should be deleted BEFORE installing the new update leave empty if none
 
