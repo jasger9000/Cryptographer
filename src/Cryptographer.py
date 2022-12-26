@@ -13,6 +13,7 @@ import zipfile
 from subprocess import Popen
 from configparser import ConfigParser
 import threading
+import updater
 import sys
 
 
@@ -127,154 +128,55 @@ def UpdateConfig(Section: str, Option: str | list, Value: str, Apply=False):
             stagedConfig.update({Option: [Section, Value]})
 
 
-def OpenSettings():
-    global langBox, ApplyBtn, Settings, langList
-    logger.info('Opening Settings')
+def CheckForUpdates(automatic: bool = True, pVersion: str = None):
+    """Checks for updates of the software and gives the user an installation prompt if an update was found
+    If the automatic parameter is False it additionally gives the user a prompt for when there was no update or no connection to the server
+    If pVersion is provided, it is given as a means to check for updates instead of the version variable"""
+    if isinstance(pVersion, str):
+        version = pVersion
 
-    # Window Config
-    Settings = Toplevel(root)
-    Settings.title(lang.CryptMain['HelpSettingsLabel'])
-    Settings.iconbitmap(resource_path('UI/Settings.ico'))
-    Settings.resizable(0,0)
-    Settings.focus()
-    Settings.transient(root)
-    Settings.grab_set()
-    logger.info('Loaded Window config')
+    new_update = updater.CheckNewVersion(version, 'https://github.com/jasger9000/Cryptographer/')
 
-    
-    Label(Settings, text=lang.CryptMain['HelpSettingsLabel'] , font=('Helvetica', 14, font.BOLD, UNDERLINE)).grid(row=0, column=0, pady=12)
-    SettingsFrame = Frame(Settings)
-    SettingsFrame.grid(row=1, column=0, padx=20)
+    if isinstance(new_update, str): # Gets triggered if a new update is available
+        if messagebox.askyesno(getTranslation('UpdateAvailableTrue', 'Title'), getTranslation('UpdateAvailableTrue', 'Message')):
+            InstallNewUpdate(new_update)
+    elif new_update is False and automatic is False: # Gets triggered if no update is available and the user requested to check for updates
+        messagebox.showinfo(getTranslation('UpdateAvailableFalse', 'Title'), getTranslation('UpdateAvailableFalse', 'Message'))
+    elif new_update is None and automatic is False: # gets triggered if a connection to the server was not possible and the user requested to check for updates
+        messagebox.showerror(getTranslation('UpdateConnectionError', 'Title'),getTranslation('UpdateConnectionError', 'Message'))
 
-    frame = Frame(Settings)
-    frame.grid(row=2, column=0, columnspan=2, padx=10, pady=(0, 12))
+def InstallNewUpdate(latest: str):
+    """Installs the new Update that was downloaded"""
 
-    Label(SettingsFrame, text=lang.SettingsLabels['General'], font=('Helvetica', 8, font.BOLD, UNDERLINE)).grid(row=0, column=0, pady=(12, 2))
-
-    # Language Setting
-    Label(SettingsFrame, text=lang.SettingsLabels['LangLabel']).grid(row=1, column=0, pady=5)
-    langList = [entry.name.rstrip('.py') for entry in os.scandir(f'{os.getcwd()}/Languages') if entry.is_file() and os.path.splitext(entry.name) == '.py']
-    langBox = Combobox(SettingsFrame, values=langList, state='readonly')
-    langBox.set(lang.Language)
-    langBox.bind('<<ComboboxSelected>>', LoadLang)
-    langBox.grid(row=1, column=1, pady=5)
-    Button(SettingsFrame, text=lang.SettingsLabels['AddLangBtn'], command=InstallNewLanguage).grid(row=1, column=2, pady=5)
-
-    # Save key?
-    SaveLabel = Label(SettingsFrame, text=lang.SettingsLabels['RememberKeyLabel'])
-    SaveLabel.grid(row=2, column=0, pady=5)
-    ToolTip(SaveLabel, msg=lang.SettingsLabels['RememberKeyTip'])
-    saveKey = IntVar(value=config.getint('Settings', 'savelastkey'))
-    Checkbutton(SettingsFrame, variable=saveKey, onvalue=1, offvalue=0, command=lambda: [UpdateConfig('Settings', 'SaveLastKey', str(saveKey.get())), UpdateConfig('State', ['keyfile', 'publickeyfile', 'privatekeyfile'], 'None')]).grid(row=2, column=1, pady=5)
-
-    # Automatic CFU?
-    Label(SettingsFrame, text=lang.SettingsLabels['AutoCFULabel']).grid(row=3, column=0, pady=5, padx=(0, 20))
-    autoCFU = IntVar(value=config['Settings']['CFUatStartup'])
-    Checkbutton(SettingsFrame, variable=autoCFU, onvalue=1, offvalue=0, command=lambda: UpdateConfig('Settings', 'CFUatStartup', str(autoCFU.get()))).grid(row=3, column=1, pady=5)
-
-    # Light/Dark/Windows mode
-    Label(SettingsFrame, text=lang.SettingsLabels['Themes'], font=('Helvetica', 8, font.BOLD, UNDERLINE)).grid(row=4, column=0, pady=(12, 2))
-
-    theme = IntVar(value=config['Settings']['theme'])
-    Label(SettingsFrame, text=lang.SettingsLabels['LightTheme']).grid(row=5, pady=5)
-    Radiobutton(SettingsFrame, variable=theme, value=1, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=5, column=1, pady=5)
-
-    Label(SettingsFrame, text=lang.SettingsLabels['DarkTheme']).grid(row=6, pady=5)
-    Radiobutton(SettingsFrame, variable=theme, value=2, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=6, column=1, pady=5)
-
-    # Label(SettingsFrame, text='Sync theme').grid(row=7, pady=5) # ! NEEDS TO CHANGE WITH LANG
-    # Radiobutton(SettingsFrame, variable=theme, value=3, command=lambda: UpdateConfig('Settings', 'theme', str(theme.get()))).grid(row=7, pady=5)
-
-    
-    # Default and Apply Button
-    DefaultBtn = Button(frame, text=lang.SettingsLabels['DefaultBtn'], command=lambda: [LoadConfig(True), root.destroy(), os.startfile(f'{os.getcwd()}/Cryptographer.exe')])
-    DefaultBtn.grid(row=0, pady=5)
-    ApplyBtn = Button(frame, state='disabled',text=lang.SettingsLabels['ApplyBtn'], command=ApplyChanges)
-    ApplyBtn.grid(row=0, column=1, pady=5)
-    
-    logger.info('Finished loading')
-    root.wait_window()
-
-def ApplyChanges():
-    root.destroy()
-
-    for option in stagedConfig:
-        section, value = stagedConfig.get(option)
-        config.set(section, option, value)
-    with open('config.ini', 'w') as f:
-        config.write(f)
-    os.startfile(f'{os.getcwd()}/Cryptographer.exe')
-
-
-def InstallNewLanguage():
-    global langBox
-
-    # Window Config
-    InstallWindow = Toplevel(Settings)
-    InstallWindow.title(lang.CryptMain['SettingsLangLabel'])
-    InstallWindow.iconbitmap(resource_path('UI/download.ico'))
-    InstallWindow.resizable(0,0)
+    # Create an Install window
+    InstallWindow = Toplevel(root)
+    InstallWindow.title(getTranslation('window', 'installWindowTitle'))
+    InstallWindow.iconbitmap(resourcePath('UI/download.ico'))
+    InstallWindow.resizable(0, 0)
     InstallWindow.focus()
-    InstallWindow.transient(Settings)
+    InstallWindow.transient(root)
     InstallWindow.grab_set()
-    logger.info('Loaded Window config')
+    logger.info('Loaded UpdateWindow Window config')
 
-    Label(InstallWindow, text=lang.CryptMain['SettingsLangLabel'] , font=('Helvetica', 14, font.BOLD, UNDERLINE)).grid(row=0, column=0, columnspan=2, pady=3)
-    
-    frame = Frame(InstallWindow)
-    frame.grid(row=1, column=0, padx=10, pady=12)
+    Label(InstallWindow, text=getTranslation('window', 'installWindowTitle'), font=('Helvetica', 14, font.BOLD, UNDERLINE)).grid(row=0, column=0, pady=12)
 
+    # creates widgets for window
+    finishable = False
+    InstallBar = Progressbar(InstallWindow, orient=HORIZONTAL, length=200, mode='indeterminate')
+    InstallBar.grid(row=1, column=0, ipady=8.499999999999999115)
+    FinishBtn = Button(InstallWindow, text='Finish', command=finishable is True, state='disabled')
+    InstallBar.start()
 
-    # Requests the Languages from Github
-    try:
-        for i in requests.get('https://api.github.com/repos/jasger9000/Cryptographer/git/trees/master').json()['tree']:
-            if i['path'] == 'Languages':
-                gitLangs = [item['path'].rstrip('.py') for item in requests.get(f'https://api.github.com/repos/jasger9000/Cryptographer/git/trees/{i["sha"]}').json()['tree'] if os.path.splitext(item['path'])[1] == '.py']
-    except requests.ConnectionError:
-        logger.warning("Couldn't connect to server")
-        gitLangs = ''
-        
-    newLangs = [i for i in gitLangs if i not in langList] # Creates List of installable Languages
+    # downloads an install the new version
+    if updater.DownloadVersion(latest, "https://github.com/jasger9000/Cryptographer/", "Cryptographer.zip", os.getcwd(), ["UI", "Languages/English.py"]):
+        FinishBtn['state'] = 'normal'
+        InstallBar['value'] = 100
+        InstallBar.stop()
 
-    newLangBox = Combobox(frame, values=newLangs, state='readonly')
-    InstallBtn = Button(frame, text=lang.SettingsLabels['AddLangBtn'], command=lambda: [
-        request.urlretrieve(f'https://raw.githubusercontent.com/jasger9000/Cryptographer/master/Languages/{newLangBox.get()}.py', f'Languages/{newLangBox.get()}.py'), 
-        newLangs.remove(newLangBox.get()),
-        langList.append(newLangBox.get()),
-        newLangBox.config(values=newLangs),
-        newLangBox.update(),
-        newLangBox.set(''),
-        langBox.config(values=langList),
-        langBox.update()
-        ])
-
-    InstallBtn.grid(row=1, column=1)
-    if len(gitLangs) == 0:
-        newLangBox.set(lang.Messages['ConnectErrLang'])
-        InstallBtn['state'] = 'disabled'
-    elif len(newLangs) == 0:
-        newLangBox.set(lang.Messages['NoNewLang'])
-        InstallBtn['state'] = 'disabled'
-
-    newLangBox.grid(row=1, column=0)
-
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base_path, relative_path)
-
-def SwitchMode(mode: str):
-    if TitleLabel.cget('text') == '' or config['State']['Mode'] != mode:
-        logger.info('Switching Mode')
-        try:
-            if EncryptFrame.winfo_exists():
-                EncryptFrame.destroy()
-                DecryptFrame.destroy()
-                KeyFrame.destroy()
-        except NameError:
-            pass
-        LoadFrames()
-        root.geometry('')
+        # waits until user clicks finish Button then closes the application and opens the new one
+        while finishable is not True:
+            Popen(f'cd /d {os.getcwd()} && start python -c "from updater import InstallVersion; InstallVersion({chr(39)}{os.getcwd()}{chr(39)}, {chr(39)}Cryptographer.zip{chr(39)}, {chr(39)}Cryptographer.exe{chr(39)}, True)" && exit', shell=True)
+            root.destroy()
 
         if mode == 'Symmetric':      
             SymWindow(EncryptFrame, DecryptFrame, KeyFrame, out)
@@ -406,6 +308,7 @@ def main():
     root.geometry('300x300')
     TitleLabel = Label(root, text='', font=('Helvetica', 14, font.BOLD, UNDERLINE)) # text will change when loading a mode
     TitleLabel.grid(row=0, column=0, columnspan=2, pady=12)
+    updater.addFileHandlerLogging(logFile)
     config, lang = LoadConfig()
     if not lang:
         return
@@ -472,14 +375,13 @@ def main():
 
 
     if config['Settings']['CFUatStartup'] == '1':
-        threading.Thread(target=lambda: CheckForUpdates('automatic')).start()
-
+        threading.Thread(target=CheckForUpdates, daemon=True).start()
     if config['State']['Mode'] == 'Symmetric':
         SwitchMode('Symmetric')
     elif config['State']['Mode'] == 'Asymmetric':
         SwitchMode('Asymmetric')
+    
     root.mainloop()
-
 
 if __name__ == '__main__':
     main()
