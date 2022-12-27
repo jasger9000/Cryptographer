@@ -1,6 +1,5 @@
 import logging
 from os import path, system
-from urllib import request
 import zipfile
 import requests
 from packaging.version import parse
@@ -95,7 +94,8 @@ def DownloadVersion(version: str, gitHubRepo: str, downloadFile: str, applicatio
         url = f'{gitHubRepo}releases/download/{version}/{downloadFile}'
         file = f'{applicationDir}/{downloadFile}'
         logger.info(f'Downloading Update from {url}')
-        request.urlretrieve(url, file)
+        with open(file, 'wb') as f:
+            f.write(requests.get(url).content)
         logger.info(f'Downloaded file and saved it to the application directory')
 
         return True
