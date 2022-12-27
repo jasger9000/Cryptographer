@@ -102,6 +102,64 @@ def DownloadVersion(version: str, gitHubRepo: str, downloadFile: str, applicatio
     except Exception:
         return False
 
+def DownloadFile(gitHubRepo: str, downloadFile: str, pathToFile: str, destinationDir: str):
+    """Downloads a file from a GitHub repo
+    # Arguments
+    gitHubRepo: the link to the repository Example: https://github.com/jasger9000/Cryptographer/
+    downloadFile: the file that is to be downloaded
+    pathToFile: The relative path to the file from the repo root THIS MUST INCLUDE THE BRANCHNAME
+    destinationDir: The destination to which the file is to be downloaded
+    
+    # Returns
+    True: If the file was downloaded correctly
+    False: If something went wrong
+    """
+
+    # Adds a '/' to the end of the url if there was none so that the request still works
+    if gitHubRepo[-1] != '/':
+        gitHubRepo += '/'
+    if pathToFile[0] == '/':
+        pathToFile = pathToFile[1:]
+    if pathToFile[-1] != '/':
+        pathToFile += '/'
+    
+    logger.info('requesting file')
+    r = requests.get(f'https://raw.{gitHubRepo.split("//")[1]}{pathToFile}{downloadFile}', timeout=5)
+    logger.info('Got request')
+
+    if r.status_code == 200:
+        logger.info('Saving file to destination')  
+        with open(f'{destinationDir}/{downloadFile}', 'wb') as f:
+            f.write(r.content)
+        logger.info('Saved file')
+        return True
+    else:
+        logger.info('file was not found')
+        return False
+    
+def getItems(gitHubRepo: str, pathToDir: str, TOKEN: str = None):
+    """returns the contents of a directory from a GitHub repo
+    # Arguments
+    gitHubRepo: the link to the repository Example: https://github.com/jasger9000/Cryptographer/
+    pathToDir: The path to the directory plus the directory from the root of the repo"""
+
+    if gitHubRepo[-1] != '/':
+        gitHubRepo += '/'
+    if pathToDir[0] == '/':
+        pathToDir = pathToDir[1:]
+    
+    items: list[str] = []
+    if isinstance(TOKEN, str):
+        r = requests.get(f'https://api.github.com/repos{gitHubRepo.lower().split("github.com")[1]}contents/{pathToDir}', headers={'Authorization': 'token ' + TOKEN}).json()
+    else:
+        r= requests.get(f'https://api.github.com/repos{gitHubRepo.lower().split("github.com")[1]}contents/{pathToDir}').json()
+    if 'message' not in r:
+        for item in r:
+            items.append(item['name'])
+
+    return items
+
+
 def InstallVersion(applicationDir: str, versionFile: str, application: str, isZipFile: bool = False):
     """Installs a downloaded version and starts it"""
     system(f"del /F /S /Q {applicationDir}{chr(92)}{application}")

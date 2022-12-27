@@ -91,7 +91,7 @@
     },
     "SettingsMenu": {
       "general": "Allgemein",
-      "addNewLanguageBtn": "Neue Sprache hinzufügen",
+      "addNewLanguage": "Neue Sprache hinzufügen",
       "languageOptionLabel": "Sprache",
       "rememberKeyOptionLabel": "Schlüssel Merken",
       "rememberKeyOptionTip": "Wenn diese Option aktiviert ist,\nwird der zuletzt verwendete Schlüssel gespeichert\nund bei jedem Start der Software geladen.",

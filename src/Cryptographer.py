@@ -4,7 +4,6 @@ from tkinter import HORIZONTAL, UNDERLINE, IntVar, Toplevel, font, messagebox, T
 from ttkbootstrap import Button, Combobox, Notebook, Progressbar, Entry, Radiobutton, Checkbutton, Frame, Label, LabelFrame, Style
 import logging
 import os
-from urllib import request, error
 from subprocess import Popen
 from configparser import ConfigParser
 import threading
@@ -230,7 +229,47 @@ def InstallNewUpdate(latest: str):
             root.destroy()
 
 def InstallNewLanguage():
-    pass
+    # Window Config
+    InstallWindow = Toplevel(root)
+    InstallWindow.title(getTranslation('SettingsMenu', 'addNewLanguage'))
+    InstallWindow.resizable(0,0)
+    InstallWindow.focus()
+    InstallWindow.transient(root)
+    InstallWindow.grab_set()
+    logger.info('Loaded Window config')
+
+    Label(InstallWindow, text=getTranslation('SettingsMenu', 'addNewLanguage') , font=('Helvetica', 14, font.BOLD, UNDERLINE)).grid(row=0, column=0, columnspan=2, pady=3)
+    
+    frame = Frame(InstallWindow)
+    frame.grid(row=1, column=0, padx=10, pady=12)
+
+    # Gets List of installed Languages
+    langList = []
+    for entry in os.scandir(f'{os.getcwd()}/Languages'):
+        if entry.is_file() and entry.name.rsplit('.')[1] == 'json':
+            langList.append(entry.name.rsplit('.')[0])
+    
+    # Requests the Languages from Github
+    gitLangs = []
+    for item in updater.getItems('https://github.com/jasger9000/Cryptographer', 'Languages'):
+        if item.rsplit('.')[1] == 'json':
+            gitLangs.append(item.rsplit('.')[0])
+        print(item, item[-3:])
+    
+    # Creates List of installable Languages
+    newLangs = []
+    for item in gitLangs:
+        if item not in langList:
+            newLangs.append(item)
+
+    langBox = Combobox(frame, values=newLangs, state='readonly')
+    InstallBtn = Button(frame, text=getTranslation('SettingsMenu', 'installBtn'), command=lambda: [updater.DownloadFile('https://github.com/jasger9000/Cryptographer', langBox.get() + '.json', 'master/Languages', 'Languages')])
+    InstallBtn.grid(row=1, column=1)
+    if len(newLangs) == 0:
+        langBox.set(getTranslation('SettingsMenu', 'noLanguagesAvailable'))
+        InstallBtn['state'] = 'disabled'
+
+    langBox.grid(row=1, column=0)
 
 def LoadLang(l):
     """Loads a Language pack if it is installed and asks the user to reinstall the English one if the users and the English one is missing.
@@ -252,11 +291,10 @@ def LoadLang(l):
             logger.exception('English Language pack not installed')
             messagebox.showerror('English not found', 'Cryptographer tried to fallback to English but failed because English is not installed.\nPlease reinstall the English Language pack.')
             if messagebox.askyesno('Reinstall English', 'Reinstall English Language pack?'):
-                try:
-                    logger.info('Trying to reinstall English')
-                    request.urlretrieve('https://raw.githubusercontent.com/jasger9000/Cryptographer/master/Languages/English.json', 'Languages/English.json')
+                logger.info('Trying to reinstall English')
+                if updater.DownloadFile('https://github.com/jasger9000/Cryptographer', 'English.json', 'master/Languages', 'Languages'):
                     UpdateConfig('Settings', 'Language', "English")
-                except error.URLError:
+                else:
                     logger.error('Connection to server could not be established')
                     messagebox.showerror("Couldn't reinstall English", "Couldn't reinstall English because connection to GitHub couldn't be Established.\nPlease try again later or check if you are Connected to the Internet.")
                     return None
@@ -346,7 +384,7 @@ def OpenSettings():
     langBox.set(config['Settings']['language'])
     langBox.bind('<<ComboboxSelected>>', lambda event: UpdateConfig('Settings', 'language', langBox.get()))
     langBox.grid(row=1, column=1, pady=5)
-    Button(SettingsFrame, text=getTranslation('SettingsMenu', 'addNewLanguageBtn'), command=InstallNewLanguage).grid(row=1, column=2, pady=5)
+    Button(SettingsFrame, text=getTranslation('SettingsMenu', 'addNewLanguage'), command=InstallNewLanguage).grid(row=1, column=2, pady=5)
 
     # Save key?
     SaveLabel = Label(SettingsFrame, text=getTranslation('SettingsMenu', 'rememberKeyOptionLabel'))

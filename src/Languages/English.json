@@ -28,10 +28,6 @@
     "notLoaded": "Not loaded",
     "finish": "Restart"
   },
-  "noLanguagesAvailable": {
-    "Title": "",
-    "Messages": "No new Languages available"
-  },
   "fileTooBig": {
     "Title": "File too big",
     "Message1": "Files larger than 100mb could take a longer time to %s.\nWould you still like to proceed?",
@@ -91,8 +87,10 @@
   },
   "SettingsMenu": {
     "general": "General",
-    "addNewLanguageBtn": "Add new Language",
+    "addNewLanguage": "Add new Language",
+    "installBtn": "Install",
     "languageOptionLabel": "Language",
+    "noLanguagesAvailable": "No new Languages available",
     "rememberKeyOptionLabel": "Remember key",
     "rememberKeyOptionTip": "If this option is enabled,\nthe last used key will be saved and loaded\neach time the software is started.",
     "autoCFUOptionLabel": "Check for Updates at startup?",
