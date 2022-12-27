@@ -278,13 +278,13 @@ def LoadLang(l):
         logger.info('Loading Language')
 
         if os.path.exists(f'Languages/{l}.json'): # Checks if Language pack exists and loads it if it does
-            with open(f'Languages/{l}.json', 'r') as f:
+            with open(f'Languages/{l}.json', 'r', encoding='UTF-8') as f:
                 lang = json.load(f)
             logger.info('Loaded ' + l + ' Language pack')
         elif os.path.exists('Languages/English.json'): # Checks if English Language pack is installed to try to fallback
             logger.error('Language not found, continuing with English')
             messagebox.showerror("Language not found", "Couldn't find the Language you are trying to use, please reinstall the Language pack")
-            with open('Languages/English.json', 'r') as f:
+            with open('Languages/English.json', 'r', encoding='UTF-8') as f:
                 lang = json.load(f)
             UpdateConfig('Settings', 'Language', "English")
         else: # Asks the user to reinstall the English Language pack
@@ -294,6 +294,8 @@ def LoadLang(l):
                 logger.info('Trying to reinstall English')
                 if updater.DownloadFile('https://github.com/jasger9000/Cryptographer', 'English.json', 'master/Languages', 'Languages'):
                     UpdateConfig('Settings', 'Language', "English")
+                    with open('Languages/English.json', 'r', encoding='UTF-8') as f:
+                        lang = json.load(f)
                 else:
                     logger.error('Connection to server could not be established')
                     messagebox.showerror("Couldn't reinstall English", "Couldn't reinstall English because connection to GitHub couldn't be Established.\nPlease try again later or check if you are Connected to the Internet.")
