@@ -461,10 +461,16 @@ def main():
     root.geometry('500x300')
     TitleLabel = Label(root, text='', font=('Helvetica', 14, font.BOLD, UNDERLINE)) # text will change when loading a mode
     TitleLabel.grid(row=0, column=0, columnspan=2, pady=12)
-    updater.addFileHandlerLogging(logFile)
-    config, lang = LoadConfig()
-    if not lang:
-        return
+    LoadConfig(False)
+
+    if os.path.exists(f'{os.getcwd()}\Cryptographer {version}.exe'):
+        try:
+            os.remove(f'{os.getcwd()}\Cryptographer.exe')
+        except FileNotFoundError:
+            pass
+        os.rename(f'{os.getcwd()}\Cryptographer {version}.exe', 'Cryptographer.exe')
+        Popen(f'"{os.getcwd()}/Cryptographer.exe"')
+        quit()
 
     # Tries to make the title, if the version variable does not exist and insert the icon
     try:
