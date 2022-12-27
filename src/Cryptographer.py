@@ -100,7 +100,7 @@ def LoadConfig():
 
 
 def UpdateConfig(section: str | None, option: str | None, value: str | None, apply: bool = False):
-    """Stages and updates the config file in 3 different modes
+    """Stages and updates the config file in 2 different modes
     ## Mode 1
     In this mode you stage a change to the config but don't apply it until the function gets called in the second mode
 
@@ -113,15 +113,6 @@ def UpdateConfig(section: str | None, option: str | None, value: str | None, app
     apply: you can completely ignore this it does not serve a function in the first mode
 
     ## Mode 2
-    In this mode you apply every staged change that was given in the session
-
-    ### Arguments
-    section: you can completely ignore this it does not serve a function in the second mode
-    option: you can completely ignore this it does not serve a function in the second mode
-    value: you can completely ignore this it does not serve a function in the second mode
-    apply: THIS NEEDS TO BE True
-
-    ## Mode 3
     In this mode you directly apply a value to an option in the config without staging it first
 
     Raises ValueError if the option does not exist in the config in the given section
@@ -153,19 +144,6 @@ def UpdateConfig(section: str | None, option: str | None, value: str | None, app
             # If the option doesn't exist in the section
             raise ValueError(f'The option "{option}" in the section "{section}" does not exist')
     # Mode 2
-    elif apply == True and section is None:
-        if stagedConfig > 0:
-            for section in stagedConfig.keys():
-                for option in stagedConfig[section]:
-                    value = stagedConfig[section][option]
-                    config.set(section, option, value)
-            with open('config.ini', 'w') as f:
-                config.write(f)
-            stagedConfig.clear()
-            logger.info('Applied all staged changes to the config')
-        else:
-            logger.info('There are no staged changes that could be applied')
-    # Mode 3
     elif apply == True and section is not None:
         if config.has_option(section, option):
             config.set(section, option, value)
@@ -175,6 +153,28 @@ def UpdateConfig(section: str | None, option: str | None, value: str | None, app
         else:
             # If the option doesn't exist in the section
             raise ValueError(f'The option "{option}" in the section "{section}" does not exist')
+
+def applyConfigUpdates():
+    """Applies the staged config to the current config and writes it to the config file"""
+    global stagedConfig
+    
+    if len(stagedConfig) > 0:
+        for section in stagedConfig.keys():
+            for option in stagedConfig[section]:
+                value = stagedConfig[section][option]
+                config.set(section, option, value)
+        with open('config.ini', 'w') as f:
+            config.write(f)
+        stagedConfig.clear()
+
+        # tries to make the Apply Button in the SettingsWindow unpressable again
+        try:
+            ApplyBtn['state'] = 'disabled'
+        except NameError:
+            pass
+        logger.info('Applied all staged changes to the config')
+    else:
+        logger.info('There are no staged changes that could be applied')
 
 
 def CheckForUpdates(automatic: bool = True, pVersion: str = None):
@@ -418,7 +418,7 @@ def OpenSettings():
     # Default and Apply Button
     DefaultBtn = Button(frame, text=getTranslation('SettingsMenu', 'defaultBtn'), command=lambda: [generateConfig(), root.destroy(), os.startfile(f'{os.getcwd()}/Cryptographer.exe')])
     DefaultBtn.grid(row=0, pady=5)
-    ApplyBtn = Button(frame, state='disabled',text=getTranslation('SettingsMenu', 'applyBtn'), command=lambda: UpdateConfig(apply=True))
+    ApplyBtn = Button(frame, state='disabled',text=getTranslation('SettingsMenu', 'applyBtn'), command=applyConfigUpdates)
     ApplyBtn.grid(row=0, column=1, pady=5)
     
     logger.info('Finished loading')
