@@ -183,9 +183,10 @@ def CheckForUpdates(automatic: bool = True, pVersion: str = None):
     If the automatic parameter is False it additionally gives the user a prompt for when there was no update or no connection to the server
     If pVersion is provided, it is given as a means to check for updates instead of the version variable"""
     if isinstance(pVersion, str):
-        version = pVersion
+        new_update = updater.CheckNewVersion(pVersion, 'https://github.com/jasger9000/Cryptographer/')
+    else:
+        new_update = updater.CheckNewVersion(version, 'https://github.com/jasger9000/Cryptographer/')
 
-    new_update = updater.CheckNewVersion(version, 'https://github.com/jasger9000/Cryptographer/')
 
     if isinstance(new_update, str): # Gets triggered if a new update is available
         if messagebox.askyesno(getTranslation('UpdateAvailableTrue', 'Title'), getTranslation('UpdateAvailableTrue', 'Message')):
