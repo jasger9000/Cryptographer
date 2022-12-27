@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime
 from tkinter import filedialog, messagebox
 from tktooltip import ToolTip 
 from PIL import ImageTk, Image
@@ -10,7 +11,7 @@ import os
 # logger config
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-fmt = logging.Formatter('[%(levelname)s] %(asctime)s - %(name)s - %(message)s')
+fmt = logging.Formatter('[%(levelname)s] %(asctime)s - %(name)s - %(message)s', datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
 
 # fileHandler config
 fileHandler = logging.FileHandler('Cryptographer.log')
@@ -155,7 +156,7 @@ def Cryptography2(mode: str, entry: Entry, out: Entry):
 
                 if mode == 'Encrypt':
                     
-                    extension = os.path.splitext(filePath)
+                    extension = os.path.splitext(filePath)[1]
                     output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind("/") + 1:len(filePath.replace(extension, ""))]}', title=lang.Dialog['Save'] + lang.Dialog['Encrypted'] + lang.Dialog['file'], filetypes=(fileTypes[5], fileTypes[0], fileTypes[4]))
                     logger.info('got new filePath')
                     contents = base64.b64encode(extension.encode()) + b'$' + base64.b64encode(k.encrypt(contents)) # Format: extension$contents
@@ -167,10 +168,10 @@ def Cryptography2(mode: str, entry: Entry, out: Entry):
                     contents = contents.split(b'$')
                     logger.info('Splitted file into List')
 
-                    contents[1] = k.decrypt(contents[1]).decode()
+                    contents[1] = k.decrypt(base64.b64decode(contents[1])).decode()
                     logger.info('Decrypted Contents')
 
-                    output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind("/") + 1:len(filePath.replace(os.path.splitext(filePath), ''))], title=lang.Dialog['Save'] + lang.Dialog['Decrypted'] + lang.Dialog['file'], filetypes=((lang.Dialog['Decrypted'] + lang.Dialog['file'], f'*{base64.b64decode(contents[0]).decode()}' ), fileTypes[4]))
+                    output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind("/") + 1:len(filePath.replace(os.path.splitext(filePath)[1], ''))], title=lang.Dialog['Save'] + lang.Dialog['Decrypted'] + lang.Dialog['file'], filetypes=((lang.Dialog['Decrypted'] + lang.Dialog['file'], f'*{base64.b64decode(contents[0]).decode()}' ), fileTypes[4]))
                     logger.info('Got New filePath')
                     with open(output, 'w') as f:
                             f.write(contents[1])
