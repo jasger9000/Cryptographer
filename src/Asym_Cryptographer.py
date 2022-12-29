@@ -46,8 +46,8 @@ def BrowseKeyDialog(mode: str, KeyFrame: Frame):
     key = filedialog.askopenfilename(initialdir=os.path.expandvars(R'C:\Users\$USERNAME\Documents'), title=lang.Dialog['Open'] + lang.Dialog[mode], filetypes=(fileTypes[type], fileTypes[4]))
     
     if mode == 'Public':
-        pubKey = key
         if key:
+            pubKey = key
             if int(config['Settings']['savelastkey']) == 1:
                 config.set('State', 'publickeyfile', key)
                 with open('config.ini', 'w') as f:
@@ -55,8 +55,8 @@ def BrowseKeyDialog(mode: str, KeyFrame: Frame):
             Indicator1.config(image=img1)
             IndicatorTooltip1 = ToolTip(Indicator1, msg=lang.Main['IndicatorTooltip'] + lang.Dialog['Loaded'], delay=1.0) # Tooltip for LoadIndicator
     else:
-        privKey = key
         if key:
+            privKey = key
             if int(config['Settings']['savelastkey']) == 1:
                 config.set('State', 'privatekeyfile', key)
                 with open('config.ini', 'w') as f:
@@ -214,7 +214,7 @@ def Cryptography2(mode: str, entry: Entry, out: Entry):
                 logger.info('Loaded File Contents')
                 
                 if mode == 'Encrypt':
-                    extension = os.path(filePath)
+                    extension = os.path.splitext(filePath)[1]
                     output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=f'Encrypted {filePath[filePath.rfind("/") + 1:len(filePath.replace(extension, ""))]}', title=lang.Dialog['Save'] + lang.Dialog['Encrypted'] + lang.Dialog['file'], filetypes=(fileTypes[5],fileTypes[0],fileTypes[4]))
                     logger.info('got new filePath')
                     try:
@@ -237,7 +237,7 @@ def Cryptography2(mode: str, entry: Entry, out: Entry):
                     contents[2] = symKey.decrypt(base64.b64decode(contents[2])).decode()
                     logger.info('Decrypted Contents')
 
-                    output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind("/") + 1:len(filePath.replace(os.path(filePath), ''))], title=lang.Dialog['Save'] + lang.Dialog['Decrypted'] + lang.Dialog['file'], filetypes=((lang.Dialog['Decrypted'] + lang.Dialog['file'],f'*{base64.b64decode(contents[0]).decode()}' ),fileTypes[4]))
+                    output = filedialog.asksaveasfilename(initialdir=os.path.expandvars(filePath[0:filePath.rfind('/') + 1]), defaultextension='.*', initialfile=filePath[filePath.rfind("/") + 1:len(filePath.replace(os.path.splitext(filePath)[1], ''))], title=lang.Dialog['Save'] + lang.Dialog['Decrypted'] + lang.Dialog['file'], filetypes=((lang.Dialog['Decrypted'] + lang.Dialog['file'],f'*{base64.b64decode(contents[0]).decode()}' ),fileTypes[4]))
                     logger.info('Got New filePath')
                     with open(output, 'w') as f:
                         f.write(contents[2])
