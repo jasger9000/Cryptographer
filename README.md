@@ -28,14 +28,14 @@ The project is fully written in python and very user friendly. You can easily en
 ## Download
 
 ### Method one: Installer (recommended)
-1. Download the [Installer](https://github.com/jasger9000/Cryptographer/releases/download/v0.7.0/Cryptographer.Installer.exe)
+1. Download the [Installer](https://github.com/jasger9000/Cryptographer/releases/download/v0.7.1/Cryptographer.Installer.exe)
 2. Double click the installer
    - You may encounter a Windows Smart Screen warning, this is due to the fact, that this software has no microsoft approved signature
 3. Follow the instructions of the installer
 4. Finished - you just need to run the program
 
 ### Method two: Zip file
-1. Download the [Zip file](https://github.com/jasger9000/Cryptographer/releases/download/v0.7.0/Cryptographer.zip)
+1. Download the [Zip file](https://github.com/jasger9000/Cryptographer/releases/download/v0.7.1/Cryptographer.zip)
 2. Extract the files to the directory you want
 3. Finished - you just need to run the program
 
