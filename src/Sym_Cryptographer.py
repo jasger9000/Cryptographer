@@ -1,5 +1,4 @@
 import base64
-from datetime import datetime
 from tkinter import filedialog, messagebox
 from tktooltip import ToolTip 
 from PIL import ImageTk, Image
@@ -11,7 +10,7 @@ import os
 # logger config
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-fmt = logging.Formatter('[%(levelname)s] %(asctime)s - %(name)s - %(message)s', datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+fmt = logging.Formatter('[%(levelname)s] %(asctime)s - %(name)s - %(message)s')
 
 # fileHandler config
 fileHandler = logging.FileHandler('Cryptographer.log')
