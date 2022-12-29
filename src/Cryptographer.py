@@ -37,7 +37,7 @@ streamHandler.setFormatter(fmt)
 streamHandler.setLevel(logging.DEBUG)
 logger.addHandler(streamHandler)
 
-version = 'v0.7.0'
+version = 'v0.7.1'
 stagedConfig = {}
 
 def LoadFileTypes(lang):
@@ -191,7 +191,7 @@ def OpenSettings():
 
     # Language Setting
     Label(SettingsFrame, text=lang.SettingsLabels['LangLabel']).grid(row=1, column=0, pady=5)
-    langList = [entry.name.strip('.py') for entry in os.scandir(resource_path('Languages')) if entry.is_file() and os.path.splitext(entry.name)[1] == '.py']
+    langList = [entry.name.strip('.py') for entry in os.scandir('Languages') if entry.is_file() and os.path.splitext(entry.name)[1] == '.py']
     langBox = Combobox(SettingsFrame, values=langList, state='readonly')
     langBox.set(lang.Language)
     langBox.bind('<<ComboboxSelected>>', LoadLang)
