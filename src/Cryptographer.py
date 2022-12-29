@@ -1,4 +1,5 @@
 import importlib
+from urllib.error import URLError
 from tktooltip import ToolTip
 from tkinter import HORIZONTAL, UNDERLINE, IntVar, Toplevel, font, messagebox, Tk, Menu, TclError
 from ttkbootstrap import Button, Combobox, Notebook, Progressbar, Entry, Radiobutton, Checkbutton, Label, Frame, LabelFrame, Style
@@ -67,22 +68,32 @@ def LoadLang(l: str):
             logger.error('Language Module not found, continuing with English')
             try:
                 messagebox.showerror("Language not found", "Couldn't find the Language you are trying to use, please reinstall the Language pack")
+                UpdateConfig('Settings', 'Language', l)
                 lang = importlib.import_module('English')
+                if lang.version < 1:
+                    return None
             except ModuleNotFoundError:
                 logger.exception('English Language pack not installed')
                 messagebox.showerror('English not found', 'Cryptographer tried to fallback to English but failed because English is not installed.\nPlease reinstall the English Language pack.')
-                return None
-        except NameError: # will trigger on startup not important
-            pass
+                if messagebox.askyesno('Reinstall English', 'Reinstall English Language pack?'):
+                    try:
+                        logger.info('Trying to reinstall English')
+                        request.urlretrieve(f'https://raw.githubusercontent.com/jasger9000/Cryptographer/master/Languages/English.py', f'Languages/English.py')
+                    except URLError:
+                        logger.error('Connection could not be established')
+                        messagebox.showerror("Couldn't reinstall English", "Couldn't reinstall English because connection to Github couldn't be Established.\nPlease try again later or check if you are Connected to the Internet.")
+                        return None
+                else:
+                    return None
         return lang
     else:
-        logger.critical('Language folder not found')
-        messagebox.showerror("Couldn't find Language folder", 
-        "Cryptographer did not find the Language folder.\nPlease reinstall the Language folder from Github, or if you think this is a bug,\n\please open a issue on Github.\nGithub: https://www.github.com/jasger9000/Cryptographer")
-        return None
+        logger.error('Language folder not found, creating new')
+        os.mkdir('/Languages')
+        LoadLang('')
 
 
 def LoadConfig(Force: bool = False):
+    global config
     config = ConfigParser()
 
     logger.info('Searching for config')
@@ -180,7 +191,7 @@ def OpenSettings():
 
     # Language Setting
     Label(SettingsFrame, text=lang.SettingsLabels['LangLabel']).grid(row=1, column=0, pady=5)
-    langList = [entry.name.rstrip('.py') for entry in os.scandir(f'{os.getcwd()}/Languages') if entry.is_file() and os.path.splitext(entry.name)[1] == '.py']
+    langList = [entry.name.strip('.py') for entry in os.scandir(resource_path('Languages')) if entry.is_file() and os.path.splitext(entry.name)[1] == '.py']
     langBox = Combobox(SettingsFrame, values=langList, state='readonly')
     langBox.set(lang.Language)
     langBox.bind('<<ComboboxSelected>>', LoadLang)
@@ -286,7 +297,6 @@ def InstallNewLanguage():
     newLangBox.grid(row=1, column=0)
 
 def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
     base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
 
@@ -348,7 +358,7 @@ def CheckForUpdates(mode: str):
         else:
             logger.info('No new version found')
             newUpdate = False
-    except ConnectionError:
+    except requests.ConnectionError:
         logger.warning("Couldn't connect to server")
         newUpdate = latest = None
 
