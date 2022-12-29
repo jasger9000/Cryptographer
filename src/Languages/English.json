@@ -1,0 +1,133 @@
+{
+  "fileTypes": {
+    "text": "Text files",
+    "video": "Video files",
+    "audio": "Audio files",
+    "picture": "Picture files",
+    "all": "All files",
+    "encrypted": "Encrypted files",
+    "key": "Key files",
+    "privateKey": "Private key files",
+    "publicKey": "Public key files"
+  },
+  "Phrases": {
+    "open": "Select",
+    "save": "Save",
+    "file": "file",
+    "encrypt": "Encrypt",
+    "encryption": "Encryption",
+    "encrypted": "Encrypted",
+    "decrypt": "Decrypt",
+    "decryption": "Decryption",
+    "decrypted": "Decrypted",
+    "key": "Key",
+    "keys": "Keys",
+    "private": "Private key",
+    "public": "Public key",
+    "loaded": "Loaded",
+    "notLoaded": "Not loaded",
+    "finish": "Restart"
+  },
+  "fileTooBig": {
+    "Title": "File too big",
+    "Message1": "Files larger than 100mb could take a longer time to %s.\nWould you still like to proceed?",
+    "Message2": "Files larger than 1 Gigabyte will take several minutes to %s or will fail.\nWould you still like to proceed?"
+  },
+  "abortedKeyGeneration": {
+    "Title": "Aborted Key Generation",
+    "Message": "Key generation aborted because you only tried to generate one key, but you need both!"
+  },
+  "noTextEntered": {
+    "Title": "No message to %s entered",
+    "Message": "You need to enter a message/filepath before you try to %s"
+  },
+  "noKeyEntered": {
+    "Title": "No %s entered",
+    "Message": "You need to insert a %s before you try to %s"
+  },
+  "wrongKeyEntered": {
+    "Title": "Wrong %s entered",
+    "Message": "This is the wrong %s to decrypt this message/file! Use the right Key!"
+  },
+  "keyNotFound": {
+    "Title": "Key not found",
+    "Message": "The %s you tried to use does not exist!\nPlease use an existing Key!"
+  },
+  "UpdateAvailableTrue": {
+    "Title": "New version available",
+    "Message": "There's a new version available for download.\n Would you like to install it?"
+  },
+  "UpdateAvailableFalse": {
+    "Title": "No Update found",
+    "Message": "You are currently running the newest version of this Software."
+  },
+  "UpdateConnectionError": {
+    "Title": "Connection to server could not be established",
+    "Message": "Couldn't check for Updates,\nConnection to GitHub couldn't be Established.\nPlease try again later or check if you are Connected to the Internet."
+  },
+  "versionNotFound": {
+    "Title": "Version not found!",
+    "Message": "The Software you are currently using doesn't have a Version registered to it,\nplease reinstall the Software.\nIf you have already done this,\nPlease open an issue and attach the log file of your current session.\nGitHub: https://github.com/jasger9000/Cryptographer\nLog file: %s"
+  },
+  "failedFileTooBig": {
+    "Title": "%s failed",
+    "Message": "The message/file couldn't be %s because it was too big!"
+  },
+  "failedFileType": {
+    "Title": "%s failed",
+    "Message": "%s failed because the filetype isn't supported"
+  },
+  "fileNotFound": {
+    "Title": "File not found",
+    "Message": "The file you would like to use was not found!\nPlease use an existing file!"
+  },
+  "unknownError": {
+    "Title": "Unknown Error",
+    "Message": "An Unknown Error occurred.\nPlease open an issue and attach the log file of your current session.\nGitHub: https://github.com/jasger9000/Cryptographer\nLog file: %s"
+  },
+  "SettingsMenu": {
+    "general": "General",
+    "addNewLanguage": "Add new Language",
+    "installBtn": "Install",
+    "languageOptionLabel": "Language",
+    "noLanguagesAvailable": "No new Languages available",
+    "rememberKeyOptionLabel": "Remember key",
+    "rememberKeyOptionTip": "If this option is enabled,\nthe last used key will be saved and loaded\neach time the software is started.",
+    "autoCFUOptionLabel": "Check for Updates at startup?",
+    "themes": "Themes",
+    "lightTheme": "Light Theme",
+    "darkTheme": "Dark Theme",
+    "defaultBtn": "Reset",
+    "applyBtn": "Apply Changes"
+  },
+  "menuBar": {
+    "mode": "Mode",
+    "symLabel": "Symmetric",
+    "asymLabel": "Asymmetric",
+    "history": "History",
+    "help": "Help",
+    "openGitHub": "Open GitHub Page",
+    "openInstallPath": "Open Installation Path",
+    "settings": "Settings",
+    "about": "About Cryptographer",
+    "CheckForUpdates": "Check for Updates"
+  },
+  "window": {
+    "symTitle": "Symmetric Cryptographer",
+    "asymTitle": "Asymmetric Cryptographer",
+    "installWindowTitle": "Installing new Version",
+    "settingsWindowTitle": "Settings",
+    "generateKeyBtn": "Generate key",
+    "generateKeypairBtn": "Generate Keypair",
+    "browseBtn": "Browse",
+    "browseKeyBtn": "Load Key",
+    "indicatorTooltip": "Indicates if a key has been loaded.\nStatus: %s",
+    "encryptMessageTitle": "Encrypt a message:",
+    "encryptFileTitle": "Encrypt a file:",
+    "decryptMessageTitle": "Decrypt a message:",
+    "decryptFileTitle": "Decrypt a file:",
+    "outputTitle": "Output",
+    "deleteBtn": "Delete",
+    "copyBtn": "Copy"
+  }
+}
