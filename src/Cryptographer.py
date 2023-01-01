@@ -2,6 +2,7 @@ from time import strftime
 from tktooltip import ToolTip
 from tkinter import HORIZONTAL, UNDERLINE, IntVar, Toplevel, font, messagebox, Tk, Menu, TclError
 from ttkbootstrap import Button, Combobox, Notebook, Progressbar, Entry, Radiobutton, Checkbutton, Frame, Label, LabelFrame, Style
+from PIL import ImageTk, Image
 import logging
 import os
 from subprocess import Popen
@@ -309,12 +310,17 @@ def LoadLang(l):
         os.mkdir('Languages')
         LoadLang(None)
 
-def getTranslation(groupKey: str, itemKey: str):
-    """Gets a translation for a given key from the language pack"""
+def getTranslation(groupKey: str, itemKey: str, *replacements):
+    """Gets a translation for a given key from the language pack
+    If replacements is given, the arguments will replace %s in the translation value"""
     global lang
 
     try:
-        return lang[groupKey][itemKey]
+        # checks if replacements is used
+        if len(replacements) == 0:
+            return lang[groupKey][itemKey]
+        else:
+            return lang[groupKey][itemKey] % replacements
     except TypeError:
         logger.exception('Language key was referenced before Language pack was loaded')
         messagebox.showerror('Language key referenced before Language was loaded', 
@@ -427,21 +433,35 @@ def OpenSettings():
 
 def SwitchMode(switchMode: str):
     """Switches from Symmetric to Asymmetric Cryptography mode and back"""
-
-    global currentMode
-
+    global currentMode, imgLoadedTrue, imgLoadedFalse
+    
     logger.info('Switching mode')
+
+    imgLoadedTrue = ImageTk.PhotoImage(Image.open(resourcePath('UI/Loaded.ico')).resize((40, 40)))
+    imgLoadedFalse = ImageTk.PhotoImage(Image.open(resourcePath('UI/NotLoaded.ico')).resize((40, 40)))
     if currentMode == switchMode:
         logger.info('Aborted switching because Software is already in the right mode')
     elif switchMode == 'Symmetric':
-        #TODO here needs to be the symWindow function
-        #TODO here needs to be a thing that changes the text of the Frame for the keys
+        windowFrames()
+
+        # Key Loaded Indicator
+        if  config['Settings']['savelastkey'] == 1 and config['State']['keyfile'] != 'None':
+            key = config['State']['keyfile']
+            Indicator = Label(KeyFrame, image=imgLoadedTrue) # LoadIndicator 
+            IndicatorTooltip = ToolTip(Indicator, msg=getTranslation('window', 'indicatorTooltip', getTranslation('Phrases', 'loaded')), delay=1.0) # Tooltip for LoadIndicator
+        else:
+            key = ''
+            Indicator = Label(KeyFrame, image=imgLoadedFalse) # LoadIndicator
+            IndicatorTooltip = ToolTip(Indicator, msg=getTranslation('window', 'indicatorTooltip', getTranslation('Phrases', 'notLoaded')), delay=1.0) # Tooltip for LoadIndicator
+        Indicator.grid(row=0, column=0, pady=10)
+        Button(KeyFrame, text=getTranslation('Phrases', 'browse'), command=thisNeedsToBeReplaced).grid(row=1, column=0, pady=2) #TODO MAKE COMMAND Browse Dialog METHOD
+        Button(KeyFrame, text=getTranslation('window', 'generateKeyBtn'), command=thisNeedsToBeReplaced).grid(row=2, column=0, padx=10, pady=6) #TODO MAKE COMMAND GENERATE KEY METHOD
+
         root.title(f'{getTranslation("window", "symTitle")} {version}')
         TitleLabel.config(text=getTranslation('window', 'symTitle'))
         UpdateConfig('State', 'mode', 'Symmetric', True)
     elif switchMode == 'Asymmetric':
         #TODO here needs to be the asymWindow function
-        #TODO here needs to be a thing that changes the text of the Frame for the keys
         root.title(f'{getTranslation("window", "asymTitle")} {version}')
         TitleLabel.config(text=getTranslation('window', 'asymTitle'))
         UpdateConfig('State', 'mode', 'Asymmetric', True)
@@ -450,6 +470,60 @@ def SwitchMode(switchMode: str):
     currentMode = switchMode
     logger.info('switching complete')
 
+def windowFrames():
+    """Loads the frames used for the Cryptography function just destroys the children of them if they already do"""
+    global MessageFrame, FileFrame, KeyFrame
+
+    # tries to destroy every child of the frames and if they don't exist already load them first
+    try:
+        for child in KeyFrame.winfo_children():
+            child.destroy()
+        logger.info()
+    except NameError:
+        # Tab Register
+        TabRegister = Notebook(root)
+        TabRegister.grid(row=1, column=0, padx=20)
+
+        # Tabs
+        MessageFrame = Frame(TabRegister)
+        FileFrame = Frame(TabRegister)
+
+        MessageFrame.pack(fill='both', expand=1)
+        FileFrame.pack(fill='both', expand=1)
+
+        TabRegister.add(MessageFrame, text=getTranslation('Phrases', 'message'))
+        TabRegister.add(FileFrame, text=getTranslation('Phrases', 'file'))
+
+        # Key frame
+        KeyFrame = LabelFrame(root, text=getTranslation('Phrases', 'key'))
+        KeyFrame.grid(row=1, column=1, padx=10)
+    
+    # Message Tab
+    Label(MessageFrame, text='\n' + getTranslation('window', 'encryptMessageTitle')).grid(row=0, column=0)
+    EncryptMessageEntry = Entry(MessageFrame, width=40) # Define Entry
+    EncryptMessageEntry.grid(row=1, column=0, padx=5) # Put Entry on screen
+    Button(MessageFrame, text=getTranslation('Phrases', 'encrypt'), command=thisNeedsToBeReplaced).grid(row=1, column=1) # Encrypt Btn #TODO MAKE THE COMMAND THE ENCRYPT METHOD
+
+    Label(MessageFrame, text='\n\n' + getTranslation('window', 'decryptMessageTitle')).grid(row=2, column=0) # Description Label
+    DecryptMessageEntry = Entry(MessageFrame, width=40) # Define Entry
+    DecryptMessageEntry.grid(row=3, column=0, padx=5, pady=5) # Put Entry on screen
+    Button(MessageFrame, text=getTranslation('Phrases', 'decrypt'), command=thisNeedsToBeReplaced).grid(row=3, column=1) # Decrypt Btn #TODO MAKE THE COMMAND THE DECRYPT METHOD
+
+    # File Tab
+    Label(FileFrame, text='\n' + getTranslation('window', 'encryptFileTitle')).grid(row=0, column=0) # Description Label
+    EncryptFileEntry = Entry(FileFrame, width=40) # Define Entry
+    EncryptFileEntry.grid(row=1, column=0, padx=5) # Put Entry on screen
+    Button(FileFrame, text=getTranslation('Phrases', 'encrypt'), command=thisNeedsToBeReplaced).grid(row=1,column=1) # Encrypt Btn #TODO MAKE THE COMMAND THE ENCRYPT METHOD
+    Button(FileFrame, text=getTranslation('Phrases', 'browse'), command=thisNeedsToBeReplaced).grid(row=1, column=2, padx=(0,5)) # BrowseCryptographyDialog #TODO MAKE THE COMMAND THE Browse Dialog METHOD
+
+    Label(FileFrame, text='\n\n' + getTranslation('window', 'decryptFileTitle')).grid(row=2, column=0) # Description Label
+    DecryptFileEntry = Entry(FileFrame, width=40) # Define Entry
+    DecryptFileEntry.grid(row=3, column=0, padx=5, pady=5) # Put Entry on screen
+    Button(FileFrame, text=getTranslation('Phrases', 'decrypt'), command=thisNeedsToBeReplaced).grid(row=3,column=1) # Decrypt Btn #TODO MAKE THE COMMAND THE DECRYPT METHOD
+    Button(FileFrame, text=getTranslation('Phrases', 'browse'), command=thisNeedsToBeReplaced).grid(row=3, column=2, padx=(0,5)) # BrowseDecryptDialog #TODO MAKE THE COMMAND THE Browse Dialog METHOD
+
+def thisNeedsToBeReplaced():
+    pass
 
 def main():
     global root, out, lang, TitleLabel, currentMode, config
@@ -458,7 +532,6 @@ def main():
     root = Tk()
 
     root.resizable(0,0)
-    root.geometry('500x300')
     TitleLabel = Label(root, text='', font=('Helvetica', 14, font.BOLD, UNDERLINE)) # text will change when loading a mode
     TitleLabel.grid(row=0, column=0, columnspan=2, pady=12)
     updater.addFileHandlerLogging(logFile)
